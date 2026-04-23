@@ -1,36 +1,63 @@
 {% extends 'flashcards/base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6">
-        <div class="card p-4 border-info">
-            <h3 class="text-info mb-4">NÂNG CẤP VŨ KHÍ: {{ deck.title }}</h3>
+<link rel="stylesheet" href="{% static 'css/edit_deck.css' %}">
+
+<div class="row justify-content-center mt-4 mb-5">
+    <div class="col-lg-8 col-md-10">
+        
+        <div class="d-flex align-items-center mb-4" data-aos="fade-down">
+            <a href="{% url 'dashboard' %}" class="btn btn-white rounded-circle p-2 shadow-sm me-3 border" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: white;">
+                <i class="ph-bold ph-arrow-left text-muted fs-4"></i>
+            </a>
+            <div>
+                <h3 class="fw-bold mb-0" style="color: var(--dark-text);">
+                    <i class="ph-duotone ph-wrench text-warning"></i> CHỈNH SỬA BỘ THẺ
+                </h3>
+                <p class="text-muted mb-0 fs-5">Bộ thẻ: <span class="fw-bold text-dark">{{ deck.title }}</span></p>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5" style="background-color: var(--white);" data-aos="fade-up">
             
             <form method="POST" action="">
                 {% csrf_token %}
                 
-                <div class="mb-3">
-                    <label class="form-label text-secondary">Tên bộ thẻ</label>
-                    <input type="text" name="title" class="form-control bg-dark text-white border-secondary" required value="{{ deck.title }}">
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-muted small text-uppercase">
+                        <i class="ph-fill ph-tag me-1 text-warning"></i> Tên bộ thẻ
+                    </label>
+                    <input type="text" name="title" class="form-control bg-light shadow-none rounded-3 p-3 fs-5 fw-bold text-dark" required value="{{ deck.title }}" placeholder="Nhập tên bộ thẻ...">
                 </div>
                 
-                <div class="mb-3">
-                    <label class="form-label text-secondary">Mô tả</label>
-                    <textarea name="description" class="form-control bg-dark text-white border-secondary" rows="3">{{ deck.description|default_if_none:'' }}</textarea>
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-muted small text-uppercase">
+                        <i class="ph-fill ph-text-align-left me-1 text-warning"></i> Mô tả chi tiết
+                    </label>
+                    <textarea name="description" class="form-control bg-light shadow-none rounded-3 p-3 text-secondary" rows="4" placeholder="Viết vài dòng mô tả về bộ thẻ này...">{{ deck.description|default_if_none:'' }}</textarea>
                 </div>
 
-                <div class="mb-4 form-check">
-                    <input type="checkbox" name="is_public" class="form-check-input bg-dark border-secondary" id="publicCheck" {% if deck.is_public %}checked{% endif %}>
-                    <label class="form-check-label text-secondary" for="publicCheck">
-                        Chia sẻ lên Kho thẻ Cộng đồng
-                    </label>
+                <div class="mb-5 p-3 rounded-3 switch-container">
+                    <div class="form-check form-switch d-flex align-items-center gap-3 m-0">
+                        <input class="form-check-input fs-4 m-0 custom-yellow-switch" type="checkbox" role="switch" name="is_public" id="publicCheck" {% if deck.is_public %}checked{% endif %}>
+                        <label class="form-check-label text-dark fw-bold" for="publicCheck" style="cursor: pointer; user-select: none;">
+                            Chia sẻ lên Kho thẻ Cộng đồng
+                            <span class="d-block text-muted fw-normal mt-1" style="font-size: 0.85rem;">Cho phép người khác nhìn thấy và học bộ thẻ này</span>
+                        </label>
+                    </div>
                 </div>
                 
-                <div class="d-flex justify-content-between">
-                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Hủy bỏ</a>
-                    <button type="submit" class="btn btn-info">LƯU THAY ĐỔI</button>
+                <div class="d-flex justify-content-between align-items-center mt-2 border-top pt-4">
+                    <a href="{% url 'dashboard' %}" class="btn btn-light text-muted fw-bold px-4 py-2 rounded-pill border shadow-sm hover-bg-gray">
+                        Hủy bỏ
+                    </a>
+                    <button type="submit" class="btn btn-yellow px-4 py-2 rounded-pill fw-bold shadow-sm">
+                        LƯU THAY ĐỔI <i class="ph-bold ph-check ms-1"></i>
+                    </button>
                 </div>
             </form>
+            
         </div>
     </div>
 </div>

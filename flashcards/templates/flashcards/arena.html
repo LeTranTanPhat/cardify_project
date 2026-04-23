@@ -1,93 +1,122 @@
 {% extends 'flashcards/base.html' %}
+{% load static %}
 
 {% block content %}
 <style>
-    /* CSS Hiệu ứng lật thẻ 3D - Giao diện Vàng Trắng Tối Giản */
+    /* CSS TRỰC TIẾP ĐỂ ĐẢM BẢO KHÔNG BỊ LỖI CACHE */
+    .arena-wrapper {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+
     .scene {
         width: 100%;
-        height: 320px;
-        perspective: 1000px;
-        margin-top: 2rem;
+        height: 380px;
+        perspective: 2000px;
+        margin: 2rem 0;
+        position: relative;
     }
+
     .flashcard {
         width: 100%;
         height: 100%;
         position: relative;
-        transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
         transform-style: preserve-3d;
         cursor: pointer;
     }
+
     .flashcard.is-flipped {
         transform: rotateY(180deg);
     }
+
     .card-face {
-        position: absolute;
-        width: 100%;
-        height: 100%;
+        position: absolute; /* Bắt buộc để 2 mặt đè lên nhau */
+        top: 0; left: 0;
+        width: 100%; height: 100%;
         backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        font-size: 1.8rem;
-        font-weight: 600;
-        border-radius: 20px;
-        padding: 30px;
+        border-radius: 28px;
+        padding: 40px;
         text-align: center;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.05); /* Bóng đổ mềm mại */
-    }
-    .card-front {
-        background-color: var(--white);
-        color: var(--dark-text);
+        box-shadow: 0 15px 45px rgba(0,0,0,0.08);
         border: 2px solid var(--border-color);
+        background-color: white; /* Màu mặc định */
     }
+
+    .card-front {
+        z-index: 2;
+    }
+
     .card-back {
-        background-color: var(--soft-yellow);
-        color: #B8860B; /* Vàng sậm cho dễ đọc */
-        border: 2px solid var(--primary-yellow);
+        background-color: var(--soft-yellow) !important;
+        color: #B8860B;
         transform: rotateY(180deg);
     }
-    .controls { display: none; } /* Ẩn nút chọn cho đến khi lật thẻ */
+
+    .card-content {
+        font-size: 2.5rem;
+        font-weight: 800;
+        word-break: break-word;
+    }
 </style>
 
-<div class="row justify-content-center mt-3">
-    <div class="col-md-8 col-lg-6 text-center">
-        <h2 class="fw-bold mb-1" style="color: var(--dark-text);">Tập trung: {{ deck.title }}</h2>
+<div class="arena-wrapper mt-3">
+    <div class="text-center" data-aos="fade-down">
+        <h2 class="fw-bold mb-1" style="color: var(--dark-text);">
+            <i class="ph-duotone ph-sword text-warning"></i> {{ deck.title }}
+        </h2>
         
         <div class="d-flex justify-content-between align-items-center mt-3 mb-2 px-2">
             <span class="text-muted fw-bold" id="progress-text">Thẻ: 1 / {{ cards.count }}</span>
-            <span class="badge bg-danger text-white fs-6 shadow-sm rounded-pill py-2 px-3" id="heart-display">❤️ {{ user.profile.hearts }}</span>
+            <span class="badge bg-danger text-white fs-6 shadow-sm rounded-pill py-2 px-3" id="heart-display">
+                <i class="ph-fill ph-heart"></i> {{ user.profile.hearts }}
+            </span>
         </div>
 
         <div class="scene">
             <div class="flashcard" id="myCard" onclick="flipCard()">
-                <div class="card-face card-front" id="card-front-text">Mặt trước</div>
-                <div class="card-face card-back" id="card-back-text">Mặt sau</div>
+                <div class="card-face card-front">
+                    <div class="card-content" id="card-front-text">Đang tải...</div>
+                    <div class="mt-4 text-muted small"><i class="ph-bold ph-mouse-simple"></i> CHẠM ĐỂ LẬT</div>
+                </div>
+                <div class="card-face card-back">
+                    <div class="card-content" id="card-back-text">Đang tải...</div>
+                    <div class="mt-4 text-warning small fw-bold">BẠN CÓ NHỚ KHÔNG?</div>
+                </div>
             </div>
         </div>
 
-        <p class="text-muted small mt-3" id="instruction-text">👆 Chạm vào thẻ để xem đáp án</p>
-
-        <div class="controls mt-4" id="action-controls">
+        <div class="controls mt-4" id="action-controls" style="display: none;">
             <div class="row g-3">
                 <div class="col-6">
-                    <button class="btn btn-outline-danger w-100 py-3 fw-bold rounded-4" onclick="markCard(false)">
-                        QUÊN (-1 ❤️)
+                    <button class="btn btn-outline-danger w-100 py-3 fw-bold rounded-4 shadow-sm" onclick="markCard(false)">
+                        <i class="ph-bold ph-x-circle me-1"></i> QUÊN (-1 ❤️)
                     </button>
                 </div>
                 <div class="col-6">
-                    <button class="btn btn-success w-100 py-3 fw-bold rounded-4" onclick="markCard(true)">
-                        NHỚ (Tiếp)
+                    <button class="btn btn-success w-100 py-3 fw-bold rounded-4 shadow-sm" onclick="markCard(true)">
+                        <i class="ph-bold ph-check-circle me-1"></i> NHỚ (TIẾP)
                     </button>
                 </div>
             </div>
         </div>
         
-        <a href="{% url 'dashboard' %}" class="btn btn-light border mt-5 fw-bold text-muted rounded-pill px-4">Thoát về trang chủ</a>
+        <div class="mt-5">
+            <a href="{% url 'dashboard' %}" class="text-decoration-none text-muted fw-bold small">
+                <i class="ph-bold ph-house"></i> THOÁT VỀ TRANG CHỦ
+            </a>
+        </div>
     </div>
 </div>
 
 <script>
-    // Nhúng dữ liệu Flashcard từ Django vào JavaScript
+    // 1. Dữ liệu thẻ từ Django
     const deckCards = [
         {% for card in cards %}
             { front: "{{ card.front_side|escapejs }}", back: "{{ card.back_side|escapejs }}" },
@@ -95,25 +124,33 @@
     ];
 
     let currentIndex = 0;
-    // Lấy số máu thật sự từ Database khi bắt đầu, không fix cứng số 5 nữa
+    // Lấy số máu thật từ Database khi load trang
     let hearts = {{ user.profile.hearts|default:5 }};
 
     const cardElement = document.getElementById('myCard');
     const frontText = document.getElementById('card-front-text');
     const backText = document.getElementById('card-back-text');
     const controls = document.getElementById('action-controls');
-    const instruction = document.getElementById('instruction-text');
     const progressText = document.getElementById('progress-text');
+    
+    // Các phần tử hiển thị máu
     const heartDisplay = document.getElementById('heart-display');
-    const navHearts = document.getElementById('nav-hearts'); // Lấy thanh máu ở Navbar bên ngoài
+    const navHearts = document.getElementById('nav-hearts'); // Nếu bạn có thanh máu ở Top Navbar
 
-    // Hàm load thẻ lên màn hình
+    // 2. Hàm lật thẻ
+    function flipCard() {
+        if (!cardElement.classList.contains('is-flipped')) {
+            cardElement.classList.add('is-flipped');
+            controls.style.display = 'block';
+        }
+    }
+
+    // 3. Hàm tải nội dung thẻ
     function loadCard() {
         if (currentIndex >= deckCards.length) {
-            // Hiệu ứng chiến thắng bằng SweetAlert2
             Swal.fire({
-                title: '🎉 Chúc mừng!',
-                text: 'Bạn đã ghi nhớ hết bộ thẻ này!',
+                title: '🎉 Hoàn thành!',
+                text: 'Bạn đã xem hết các thẻ trong bộ này.',
                 icon: 'success',
                 confirmButtonColor: '#FFD700'
             }).then(() => {
@@ -121,45 +158,46 @@
             });
             return;
         }
-        
-        // Reset trạng thái
+
+        // Reset trạng thái thẻ
         cardElement.classList.remove('is-flipped');
         controls.style.display = 'none';
-        instruction.style.display = 'block';
-        
-        // Cập nhật nội dung
-        frontText.innerText = deckCards[currentIndex].front;
-        backText.innerText = deckCards[currentIndex].back;
-        progressText.innerText = `Thẻ: ${currentIndex + 1} / ${deckCards.length}`;
+
+        // Đợi hiệu ứng lật ngược lại rồi mới đổi chữ
+        setTimeout(() => {
+            frontText.innerText = deckCards[currentIndex].front;
+            backText.innerText = deckCards[currentIndex].back;
+            progressText.innerText = `Thẻ: ${currentIndex + 1} / ${deckCards.length}`;
+        }, 150);
     }
 
-    // Hàm lật thẻ
-    function flipCard() {
-        if (!cardElement.classList.contains('is-flipped')) {
-            cardElement.classList.add('is-flipped');
-            controls.style.display = 'block';
-            instruction.style.display = 'none';
-        }
-    }
-
-    // Hàm đánh giá Nhớ/Quên (Đã gọi API Server)
+    // 4. Hàm đánh giá (Nhớ/Quên) và Xử lý trừ máu
     function markCard(isRemembered) {
         if (!isRemembered) {
-            // Gửi báo cáo trừ máu về Server
-            fetch('/reduce-heart/', { method: 'POST' })
+            // NẾU BẤM QUÊN: Gọi API Server để trừ máu
+            fetch('/reduce-heart/', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' // Thêm token của Django để không bị lỗi 403 Forbidden
+                }
+            })
             .then(response => response.json())
             .then(data => {
                 if (data.hearts !== undefined) {
                     hearts = data.hearts;
-                    // Cập nhật giao diện bên trong Đấu trường
-                    heartDisplay.innerText = `❤️ ${hearts}`;
-                    // Cập nhật luôn thanh Navbar ở góc trên
-                    if (navHearts) navHearts.innerText = `❤️ ${hearts}/5`;
+                    
+                    // Cập nhật số máu lên màn hình Đấu trường
+                    heartDisplay.innerHTML = `<i class="ph-fill ph-heart"></i> ${hearts}`;
+                    
+                    // Cập nhật Navbar ở góc trên (nếu có)
+                    if (navHearts) navHearts.innerHTML = `❤️ ${hearts}/5`;
 
+                    // Kiểm tra nếu hết máu
                     if (hearts <= 0) {
                         Swal.fire({
                             title: 'Hết máu rồi! 💔',
-                            text: 'Trí não đang quá tải. Hãy vào Trạm Hồi Máu Pomodoro nhé!',
+                            text: 'Trí não đang quá tải. Hãy vào Trạm Hồi Máu Pomodoro để nạp năng lượng nhé!',
                             icon: 'warning',
                             confirmButtonColor: '#FFD700',
                             confirmButtonText: 'Về trang chủ',
@@ -169,9 +207,9 @@
                                 window.location.href = "{% url 'dashboard' %}";
                             }
                         });
-                        return;
+                        return; // Dừng lại, không tải thẻ tiếp theo nữa
                     } else {
-                        // Nếu máu vẫn còn > 0 thì cho đi tiếp câu sau
+                        // Máu > 0 thì cho đi tiếp câu sau
                         currentIndex++;
                         loadCard();
                     }
@@ -179,13 +217,13 @@
             })
             .catch(err => console.error("Lỗi đồng bộ máu:", err));
         } else {
-            // Trả lời đúng thì sang luôn câu sau
+            // NẾU BẤM NHỚ: Không trừ máu, sang thẻ luôn
             currentIndex++;
             loadCard();
         }
     }
 
-    // Khởi chạy thẻ đầu tiên
+    // 5. Khởi chạy thẻ đầu tiên
     loadCard();
 </script>
 {% endblock %}
