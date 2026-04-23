@@ -1,0 +1,356 @@
+/* ==========================================================================
+   1. BIẾN VÀ CẤU HÌNH CHUNG
+   ========================================================================== */
+   :root {
+    --primary-yellow: #FFD700;
+    --primary-orange: #FF9800;
+    --soft-yellow: #FFF9E3;
+    --dark-text: #2D3436;
+    --light-gray: #F4F7F6;
+    --white: #FFFFFF;
+    --border-color: #E0E0E0;
+    --sidebar-width: 260px;
+    --danger-red: #dc3545;
+    --soft-red: #fff5f5;
+}
+
+body {
+    background-color: var(--light-gray);
+    color: var(--dark-text);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+}
+
+/* ==========================================================================
+   2. LAYOUT CHÍNH (SIDEBAR & CONTENT AREA)
+   ========================================================================== */
+.main-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--white);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    height: 100vh;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+}
+
+.brand-logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--dark-text);
+    text-decoration: none;
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-icon {
+    color: var(--primary-yellow);
+    font-size: 2rem;
+}
+
+.nav-menu {
+    list-style: none;
+    padding: 0;
+    flex-grow: 1;
+}
+
+.nav-item {
+    margin-bottom: 0.5rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    color: var(--dark-text);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+.nav-link:hover, .nav-link.active {
+    background-color: var(--soft-yellow);
+    color: #B8860B;
+}
+
+.content-area {
+    margin-left: var(--sidebar-width);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==========================================================================
+   3. TOP NAVBAR & USER STATUS (ĐÃ SỬA LỖI CĂN LỀ)
+   ========================================================================== */
+.top-navbar {
+    height: 70px;
+    background-color: var(--white);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center; 
+    justify-content: flex-end; 
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.user-status-wrapper {
+    display: flex;
+    align-items: center; 
+    gap: 1.2rem;
+}
+
+/* Thanh Năng Lượng ⚡ */
+.energy-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8f9fa;
+    padding: 6px 14px;
+    border-radius: 50px;
+    border: 1px solid var(--border-color);
+}
+
+.energy-progress {
+    width: 100px;
+    height: 10px !important;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0;
+}
+
+.energy-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-yellow), var(--primary-orange));
+    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.energy-text {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--dark-text);
+    min-width: 55px;
+    line-height: 1; /* Giúp text không bị nhảy dòng */
+}
+
+/* Badges (Tim, Level) */
+.stat-badge {
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.heart-badge {
+    color: var(--danger-red);
+    background: var(--soft-red);
+    border: 1px solid #feb2b2;
+    animation: heartPulse 1.5s infinite;
+}
+
+.level-badge {
+    color: #B8860B;
+    background: var(--soft-yellow);
+    border: 1px solid #faf089;
+}
+
+@keyframes heartPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+
+/* Profile Info */
+.user-profile-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 15px;
+    border-left: 2px solid var(--border-color);
+    height: 30px;
+}
+
+.username-text {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--dark-text);
+}
+
+/* ==========================================================================
+   4. TRẠM HỒI NĂNG LƯỢNG (POMODORO)
+   ========================================================================== */
+.timer-circle {
+    width: 320px; 
+    height: 320px; 
+    border-radius: 50%;
+    background-color: var(--white); 
+    border: 12px solid #f0f0f0;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    margin: 0 auto; 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.timer-text { 
+    font-size: 4.5rem; 
+    font-weight: 700; 
+    font-family: 'Orbitron', sans-serif; 
+    color: var(--dark-text); 
+    z-index: 2;
+}
+
+.timer-circle.running { 
+    border-color: var(--primary-yellow); 
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.3); 
+    animation: chargingPulse 2s infinite; 
+}
+
+.timer-circle.running::after {
+    content: "";
+    position: absolute;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    border: 2px solid var(--primary-yellow);
+    animation: ripple 2s infinite;
+    opacity: 0;
+}
+
+@keyframes chargingPulse { 
+    0% { transform: scale(1); } 
+    50% { transform: scale(1.02); } 
+    100% { transform: scale(1); } 
+}
+
+@keyframes ripple {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(1.4); opacity: 0; }
+}
+
+.btn-timer {
+    padding: 15px 50px;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+.pomodoro-tips {
+    max-width: 500px;
+    border: 1px solid var(--border-color);
+    background-color: var(--white);
+    font-style: italic;
+}
+
+/* ==========================================================================
+   5. COMPONENTS (CARDS & BUTTONS)
+   ========================================================================== */
+.card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+}
+
+.btn-yellow {
+    background-color: var(--primary-yellow);
+    color: var(--dark-text);
+    border: none;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 10px 24px;
+    transition: all 0.3s;
+}
+
+.btn-yellow:hover {
+    background-color: #ECC400;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+/* ==========================================================================
+   6. DASHBOARD & HOẠT ẢNH (ANIMATIONS)
+   ========================================================================== */
+
+/* 6.1. Hiệu ứng cho Card Bộ thẻ (Nảy nhẹ và đổi màu viền khi hover) */
+.deck-card {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    position: relative;
+}
+
+.deck-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 30px rgba(255, 215, 0, 0.15);
+    border-color: var(--primary-yellow);
+}
+
+/* 6.2. Hiệu ứng Shimmer (Vệt sáng trắng lướt qua thẻ nhìn rất sang) */
+.deck-card::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -100%;
+    width: 50%; height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+    transform: skewX(-25deg);
+    transition: 0.5s;
+}
+
+.deck-card:hover::after {
+    left: 150%;
+}
+
+/* 6.3. Hiệu ứng cho Icon bên trong Card (Xoay và phóng to nhẹ) */
+.deck-card i {
+    transition: transform 0.3s ease;
+}
+
+.deck-card:hover i.ph-duotone {
+    transform: rotate(15deg) scale(1.2);
+}
+
+/* 6.4. Nút bấm phát sáng (Glow) dùng cho các nút quan trọng như "Học ngay" */
+.btn-glow {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-glow::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    /* Tạo một điểm sáng mờ ở giữa và lan tỏa ra xung quanh */
+    background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+    transform: scale(0);
+    transition: transform 0.6s ease-out;
+}
+
+.btn-glow:hover::before {
+    transform: scale(1);
+}

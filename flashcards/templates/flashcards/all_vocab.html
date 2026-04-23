@@ -1,0 +1,279 @@
+{% extends 'flashcards/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-4" data-aos="fade-in">
+    <div class="col-lg-10">
+        
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <a href="{% url 'dictionary' %}" class="btn btn-white rounded-circle p-2 shadow-sm me-3 border" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: white;">
+                    <i class="ph-bold ph-arrow-left text-muted fs-4"></i>
+                </a>
+                <div>
+                    <h3 class="fw-bold mb-0" style="color: var(--dark-text);">
+                        <i class="ph-fill ph-books text-warning"></i> Thư Viện Từ Vựng
+                    </h3>
+                    <p class="text-muted mb-0">Hệ thống toàn bộ từ vựng đa ngôn ngữ</p>
+                    
+                    <div class="mt-2 d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-danger fw-bold rounded-pill" onclick="confirmDeleteAll()">
+                            <i class="ph-bold ph-trash"></i> Xóa tất cả
+                        </button>
+                        <button class="btn btn-sm btn-outline-success fw-bold rounded-pill" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                            <i class="ph-bold ph-upload-simple"></i> Upload File CSV
+                        </button>
+                    </div>
+
+                    <form id="deleteAllForm" action="{% url 'delete_all_vocab' %}" method="POST" class="d-none">
+                        {% csrf_token %}
+                    </form>
+                </div>
+            </div>
+            <span class="badge bg-warning text-dark fs-6 rounded-pill px-3 py-2 shadow-sm" id="total-count">Đang tải...</span>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-3 mb-4" style="background-color: var(--white);">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <select id="filter-lang" class="form-select border-0 bg-light shadow-none fw-bold text-muted" onchange="renderTable(true)">
+                        <option value="all">🌍 Tất cả ngôn ngữ</option>
+                        <option value="en">🇬🇧 Tiếng Anh</option>
+                        <option value="zh">🇨🇳 Tiếng Trung</option>
+                        <option value="ko">🇰🇷 Tiếng Hàn</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 text-muted"><i class="ph-bold ph-magnifying-glass"></i></span>
+                        <input type="text" id="search-input" class="form-control bg-light border-0 shadow-none" placeholder="Tìm kiếm từ vựng hoặc nghĩa..." oninput="renderTable(true)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background-color: var(--white);">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" class="text-muted fw-bold py-3 ps-4" style="width: 15%;">Ngôn ngữ</th>
+                            <th scope="col" class="text-muted fw-bold py-3" style="width: 35%;">Từ vựng</th>
+                            <th scope="col" class="text-muted fw-bold py-3" style="width: 35%;">Ý nghĩa</th>
+                            <th scope="col" class="text-muted fw-bold py-3 text-center" style="width: 15%;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vocab-table-body">
+                        </tbody>
+                </table>
+            </div>
+            
+            <div id="empty-state" class="text-center py-5 d-none">
+                <i class="ph-duotone ph-ghost text-muted mb-3" style="font-size: 4rem;"></i>
+                <h5 class="fw-bold text-muted">Không tìm thấy từ này!</h5>
+                <p class="text-muted">Hãy thử tìm với một từ khóa khác nhé.</p>
+            </div>
+        </div>
+
+        <div id="pagination-container" class="mt-4 d-flex justify-content-center">
+            </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form action="{% url 'upload_csv' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold"><i class="ph-fill ph-file-csv text-success"></i> Thêm từ vựng hàng loạt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">Vui lòng chuẩn bị file Excel có 3 cột: <b>Word</b>, <b>Meaning</b>, <b>Language</b> (en, zh, ko) và lưu dưới dạng <b>.CSV (UTF-8)</b>.</p>
+                    <input class="form-control bg-light" type="file" name="csv_file" accept=".csv" required>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill fw-bold" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success rounded-pill fw-bold">Bắt đầu Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Cơ sở dữ liệu tổng hợp
+    const masterLibrary = {{ db_words|safe }};
+
+    // CẤU HÌNH PHÂN TRANG
+    const itemsPerPage = 10; 
+    let currentPage = 1;
+
+    function renderTable(resetPage = false) {
+        if (resetPage) {
+            currentPage = 1; 
+        }
+
+        const filterLang = document.getElementById('filter-lang').value;
+        const searchQuery = document.getElementById('search-input').value.toLowerCase();
+        const tableBody = document.getElementById('vocab-table-body');
+        const emptyState = document.getElementById('empty-state');
+        const countDisplay = document.getElementById('total-count');
+        const paginationContainer = document.getElementById('pagination-container');
+
+        const filteredData = masterLibrary.filter(item => {
+            const matchLang = (filterLang === 'all') || (item.lang === filterLang);
+            const matchSearch = item.word.toLowerCase().includes(searchQuery) || item.meaning.toLowerCase().includes(searchQuery);
+            return matchLang && matchSearch;
+        });
+
+        countDisplay.innerText = `Tổng số: ${filteredData.length} từ`;
+
+        if (filteredData.length === 0) {
+            tableBody.innerHTML = '';
+            emptyState.classList.remove('d-none');
+            paginationContainer.innerHTML = ''; 
+            return;
+        }
+
+        emptyState.classList.add('d-none');
+        const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+        
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedData = filteredData.slice(startIndex, endIndex); 
+
+        let html = '';
+        paginatedData.forEach(item => {
+            let badgeClass = 'bg-secondary';
+            if(item.lang === 'en') badgeClass = 'bg-primary text-white';
+            if(item.lang === 'zh') badgeClass = 'bg-danger text-white';
+            if(item.lang === 'ko') badgeClass = 'bg-info text-dark';
+
+            html += `
+                <tr>
+                    <td class="ps-4">
+                        <span class="badge ${badgeClass} rounded-pill px-2 py-1">${item.flag} ${item.langName}</span>
+                    </td>
+                    <td class="fw-bold fs-5" style="color: var(--dark-text);">${item.word}</td>
+                    <td class="text-muted">${item.meaning}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-light border shadow-none text-warning fw-bold rounded-pill px-3" onclick="saveToDeck('${item.word}')">
+                            <i class="ph-bold ph-plus"></i> Tạo thẻ
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        tableBody.innerHTML = html;
+
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        const paginationContainer = document.getElementById('pagination-container');
+        
+        if (totalPages <= 1) {
+            paginationContainer.innerHTML = '';
+            return;
+        }
+
+        let paginationHtml = `<ul class="pagination shadow-sm flex-wrap justify-content-center">`;
+        
+        paginationHtml += `
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <button class="page-link text-dark fw-bold" onclick="changePage(${currentPage - 1})">« Trước</button>
+            </li>
+        `;
+
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+
+        if (currentPage <= 3) {
+            endPage = Math.min(totalPages, 5);
+        }
+        if (currentPage >= totalPages - 2) {
+            startPage = Math.max(1, totalPages - 4);
+        }
+
+        if (startPage > 1) {
+            paginationHtml += `<li class="page-item"><button class="page-link text-dark fw-bold" onclick="changePage(1)">1</button></li>`;
+            if (startPage > 2) {
+                paginationHtml += `<li class="page-item disabled"><span class="page-link text-muted">...</span></li>`;
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const activeClass = i === currentPage ? 'active bg-warning border-warning text-dark' : 'text-dark';
+            paginationHtml += `
+                <li class="page-item">
+                    <button class="page-link ${activeClass} fw-bold" onclick="changePage(${i})">${i}</button>
+                </li>
+            `;
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                paginationHtml += `<li class="page-item disabled"><span class="page-link text-muted">...</span></li>`;
+            }
+            paginationHtml += `<li class="page-item"><button class="page-link text-dark fw-bold" onclick="changePage(${totalPages})">${totalPages}</button></li>`;
+        }
+
+        paginationHtml += `
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <button class="page-link text-dark fw-bold" onclick="changePage(${currentPage + 1})">Sau »</button>
+            </li>
+        `;
+
+        paginationHtml += `</ul>`;
+        paginationContainer.innerHTML = paginationHtml;
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        renderTable(false); 
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
+    }
+
+    function saveToDeck(word) {
+        Swal.fire({
+            title: 'Chuyển sang tạo thẻ?',
+            text: `Bạn muốn tạo flashcard cho từ "${word}" chứ?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#FFD700',
+            cancelButtonColor: '#e0e0e0',
+            confirmButtonText: 'Đúng vậy!',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "{% url 'dashboard' %}";
+            }
+        });
+    }
+
+    // ĐÃ THÊM HÀM XỬ LÝ NÚT XÓA TẤT CẢ Ở ĐÂY
+    function confirmDeleteAll() {
+        Swal.fire({
+            title: 'Xóa toàn bộ từ vựng?',
+            text: "Dữ liệu sẽ biến mất vĩnh viễn và không thể khôi phục!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#e0e0e0',
+            confirmButtonText: 'Đúng, xóa sạch đi!',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Submit form ẩn để gọi views thực hiện xóa
+                document.getElementById('deleteAllForm').submit();
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => renderTable(true));
+</script>
+{% endblock %}

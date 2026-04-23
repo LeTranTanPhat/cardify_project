@@ -1,0 +1,26 @@
+{% extends 'flashcards/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card p-4 border-info bg-dark">
+            <h4 class="text-info mb-4">CHỈNH SỬA THẺ</h4>
+            <form method="POST" action="">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label text-secondary">Mặt trước</label>
+                    <textarea name="front_side" class="form-control bg-dark text-white border-secondary" rows="3" required>{{ card.front_side }}</textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-secondary">Mặt sau</label>
+                    <textarea name="back_side" class="form-control bg-dark text-white border-secondary" rows="3" required>{{ card.back_side }}</textarea>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'add_card' card.deck.id %}" class="btn btn-outline-secondary">Hủy bỏ</a>
+                    <button type="submit" class="btn btn-info">LƯU THAY ĐỔI</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

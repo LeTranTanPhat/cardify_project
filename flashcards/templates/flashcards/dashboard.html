@@ -1,0 +1,50 @@
+{% extends 'flashcards/base.html' %}
+
+{% block content %}
+<div class="dashboard-header mb-5" data-aos="fade-down">
+    <h1 class="fw-bold">Chào mừng trở lại, {{ user.username }}! 👋</h1>
+    <p class="text-muted">Hôm nay bạn muốn chinh phục thêm bao nhiêu từ vựng?</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4 col-lg-3" data-aos="zoom-in">
+        <a href="{% url 'create_deck' %}" class="text-decoration-none">
+            <div class="card h-100 border-dashed d-flex align-items-center justify-content-center p-4 text-muted" 
+                 style="border: 2px dashed #ccc; background: transparent;">
+                <div class="text-center">
+                    <i class="ph ph-plus-circle display-4"></i>
+                    <p class="fw-bold mt-2">Tạo bộ thẻ mới</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    {% for deck in decks %}
+    <div class="col-md-4 col-lg-3" 
+         data-aos="fade-up" 
+         data-aos-delay="{{ forloop.counter|add:forloop.counter }}00"> <div class="card h-100 deck-card shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between mb-3">
+                    <i class="ph-duotone ph-cards text-warning fs-1"></i>
+                    <span class="badge bg-light text-dark border">{{ deck.cards.count }} thẻ</span>
+                </div>
+                
+                <h5 class="card-title fw-bold">{{ deck.title }}</h5>
+                <p class="card-text text-muted small">{{ deck.description|truncatechars:60 }}</p>
+                
+                <div class="mt-4 d-flex gap-2">
+                    <a href="{% url 'arena' deck.id %}" class="btn btn-yellow btn-glow flex-grow-1">
+                        <i class="ph-fill ph-play me-1"></i> Học ngay
+                    </a>
+                    <a href="{% url 'add_card' deck.id %}" class="btn btn-light border">
+                        <i class="ph ph-pencil-simple"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    {% endfor %}
+</div>
+
+{% endblock %}

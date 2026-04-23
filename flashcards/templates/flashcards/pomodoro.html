@@ -1,0 +1,99 @@
+{% extends 'flashcards/base.html' %}
+
+{% block content %}
+<div class="container text-center mt-5" data-aos="zoom-in">
+    <div class="mb-4">
+        <h2 class="fw-bold display-6 mb-2">
+            <i class="ph-fill ph-lightning text-warning"></i> TRẠM HỒI NĂNG LƯỢNG
+        </h2>
+        <p class="text-muted fs-5">Tập trung làm việc để nạp lại <span class="fw-bold text-warning">+20 ⚡</span></p>
+    </div>
+
+    <div class="timer-circle mb-5" id="timer-display">
+        <div class="timer-text" id="time">25:00</div>
+    </div>
+
+    <div id="status-area" class="mb-4">
+        <h4 class="fw-bold text-muted" id="status-text">Sẵn sàng nạp điện?</h4>
+    </div>
+
+    <div class="d-flex justify-content-center gap-3">
+        <button id="start-btn" class="btn btn-yellow btn-timer rounded-pill fw-bold shadow" onclick="startTimer()">
+            BẮT ĐẦU NẠP
+        </button>
+        <button id="cancel-btn" class="btn btn-outline-danger btn-timer rounded-pill fw-bold" onclick="confirmReset()" style="display: none;">
+            DỪNG LẠI
+        </button>
+    </div>
+
+    <div class="mt-5 p-4 rounded-4 shadow-sm mx-auto pomodoro-tips">
+        <p class="mb-0 text-muted">
+            <i class="ph ph-lightbulb me-2"></i> <strong>Mẹo:</strong> Hãy để điện thoại sang một bên và tập trung hoàn toàn để năng lượng được nạp hiệu quả nhất!
+        </p>
+    </div>
+</div>
+
+<script>
+    const STUDY_TIME = 1;
+    let timeLeft = STUDY_TIME * 60;
+    let timer;
+    let isRunning = false;
+    
+    function updateDisplay() {
+        let mins = Math.floor(timeLeft / 60);
+        let secs = timeLeft % 60;
+        document.getElementById('time').innerText = 
+            `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+    }
+
+    function startTimer() {
+        if (isRunning) return;
+        isRunning = true;
+
+        document.getElementById('timer-display').classList.add('running');
+        document.getElementById('status-text').innerHTML = 'Đang nạp năng lượng... <span class="spinner-grow spinner-grow-sm text-warning"></span>';
+        document.getElementById('start-btn').style.display = 'none';
+        document.getElementById('cancel-btn').style.display = 'block';
+
+        timer = setInterval(() => {
+            timeLeft--;
+            updateDisplay();
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                completePomodoro();
+            }
+        }, 1000);
+    }
+
+    function completePomodoro() {
+        Swal.fire({
+            title: 'NẠP ĐIỆN THÀNH CÔNG!',
+            text: 'Bạn đã nhận được +20 Năng lượng (⚡)',
+            icon: 'success',
+            iconColor: '#FFD700',
+            confirmButtonText: 'NHẬN NGAY',
+            confirmButtonColor: '#FFD700'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('{% url "add_heart" %}')
+                    .then(() => { window.location.href = "{% url 'dashboard' %}"; });
+            }
+        });
+    }
+
+    function confirmReset() {
+        Swal.fire({
+            title: 'Dừng nạp điện?',
+            text: "Tiến trình sẽ bị mất nếu bạn dừng lại!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Dừng nạp',
+            cancelButtonText: 'Tiếp tục'
+        }).then((result) => {
+            if (result.isConfirmed) location.reload();
+        });
+    }
+
+    updateDisplay();
+</script>
+{% endblock %}
