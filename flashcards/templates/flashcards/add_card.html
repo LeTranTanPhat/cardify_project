@@ -62,29 +62,47 @@
                 {% endif %}
             </div>
 
-            <div class="row g-3">
+            <div class="row g-4 mt-3">
                 {% for card in cards %}
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm rounded-4" style="background-color: var(--white);">
-                        <div class="card-body p-3 p-md-4">
-                            <div class="row align-items-center">
-                                <div class="col-md-6 border-end-md mb-3 mb-md-0">
-                                    <span class="badge bg-secondary-subtle text-secondary mb-2 rounded-pill px-2">Mặt trước</span>
-                                    <p class="mb-0 fw-bold fs-5" style="color: var(--dark-text);">{{ card.front_side }}</p>
+                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter }}50">
+                    <div class="card h-100 flashcard-item shadow-sm">
+                        <div class="card-body position-relative">
+                            
+                            <div class="position-absolute top-0 end-0 p-2 card-actions d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-light border text-primary" data-bs-toggle="modal" data-bs-target="#editCardModal-{{ card.id }}" title="Sửa thẻ">
+                                    <i class="ph-bold ph-pencil-simple"></i>
+                                </button>
+                                <form action="{% url 'delete_card' card.id %}" method="POST" id="delete-card-form-{{ card.id }}" class="m-0">
+                                    {% csrf_token %}
+                                    <button type="button" class="btn btn-sm btn-light border text-danger" onclick="confirmDeleteCard('{{ card.id }}')" title="Xóa thẻ">
+                                        <i class="ph-bold ph-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+            
+                            <div class="mt-4 pt-2">
+                                <div class="mb-3 pb-2 border-bottom">
+                                    <small class="text-muted fw-bold text-uppercase" style="font-size: 0.75rem;">
+                                        <i class="ph-fill ph-translate me-1 text-primary"></i> Mặt trước
+                                    </small>
+                                    <p class="fs-5 mt-1 mb-0 fw-bold text-dark">{{ card.front_side }}</p>
                                 </div>
-                                <div class="col-md-6 ps-md-4">
-                                    <span class="badge bg-warning-subtle text-warning mb-2 rounded-pill px-2">Mặt sau</span>
-                                    <p class="mb-0 text-muted fs-5">{{ card.back_side }}</p>
+                                <div>
+                                    <small class="text-muted fw-bold text-uppercase" style="font-size: 0.75rem;">
+                                        <i class="ph-fill ph-book-open-text me-1 text-warning"></i> Mặt sau
+                                    </small>
+                                    <p class="fs-5 mt-1 mb-0 text-secondary">{{ card.back_side }}</p>
                                 </div>
                             </div>
+            
                         </div>
                     </div>
                 </div>
                 {% empty %}
-                <div class="col-12 text-center py-5 rounded-4" style="background-color: var(--white); border: 2px dashed var(--border-color);">
-                    <i class="ph-duotone ph-cards fs-1 text-muted mb-2" style="font-size: 3rem;"></i>
-                    <h5 class="fw-bold text-muted">Bộ thẻ đang trống!</h5>
-                    <p class="text-muted mb-0">Hãy điền thông tin vào bảng phía trên để tạo thẻ đầu tiên nhé.</p>
+                <div class="col-12 text-center py-5 text-muted" data-aos="zoom-in">
+                    <i class="ph-duotone ph-cards fs-1 mb-3 text-warning"></i>
+                    <h5 class="fw-bold">Chưa có từ vựng nào!</h5>
+                    <p>Hãy dùng form bên trên để thêm mặt trước và mặt sau cho thẻ nhé.</p>
                 </div>
                 {% endfor %}
             </div>
@@ -92,4 +110,63 @@
 
     </div>
 </div>
+
+{% for card in cards %}
+<div class="modal fade" id="editCardModal-{{ card.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header bg-light border-bottom-0" style="border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="ph-duotone ph-pencil-simple text-primary fs-4 align-middle me-1"></i> Chỉnh sửa từ vựng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'edit_card' card.id %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Mặt trước (Từ vựng)</label>
+                        <textarea name="front_side" class="form-control" rows="2" required style="border-radius: 10px;">{{ card.front_side }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Mặt sau (Ý nghĩa / Ví dụ)</label>
+                        <textarea name="back_side" class="form-control" rows="3" required style="border-radius: 10px;">{{ card.back_side }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 bg-light" style="border-radius: 0 0 15px 15px;">
+                    <button type="button" class="btn btn-secondary border-0" data-bs-dismiss="modal" style="border-radius: 8px;">Hủy</button>
+                    <button type="submit" class="btn btn-yellow px-4 fw-bold shadow-sm" style="border-radius: 8px;">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function confirmDeleteCard(cardId) {
+        Swal.fire({
+            title: 'Xóa từ vựng này?',
+            text: "Thao tác này không thể hoàn tác!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="ph-bold ph-trash"></i> Xóa ngay',
+            cancelButtonText: 'Hủy',
+            background: '#ffffff',
+            borderRadius: '15px',
+            showClass: {
+                popup: 'animate__animated animate__zoomIn animate__faster'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__zoomOut animate__faster'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-card-form-' + cardId).submit();
+            }
+        });
+    }
+</script>
 {% endblock %}

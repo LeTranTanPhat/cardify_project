@@ -22,28 +22,62 @@
     {% for deck in decks %}
     <div class="col-md-4 col-lg-3" 
          data-aos="fade-up" 
-         data-aos-delay="{{ forloop.counter|add:forloop.counter }}00"> <div class="card h-100 deck-card shadow-sm">
+         data-aos-delay="{{ forloop.counter }}00"> 
+        
+        <div class="card h-100 deck-card shadow-sm">
             <div class="card-body p-4">
-                <div class="d-flex justify-content-between mb-3">
+                
+                <div class="d-flex justify-content-between align-items-start mb-3">
                     <i class="ph-duotone ph-cards text-warning fs-1"></i>
-                    <span class="badge bg-light text-dark border">{{ deck.cards.count }} thẻ</span>
+                    
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light text-dark border">{{ deck.cards.count }} thẻ</span>
+                        
+                        <div class="dropdown">
+                            <button class="btn btn-dots text-muted p-0 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ph ph-dots-three-vertical fs-4"></i>
+                            </button>
+                            
+                            <ul class="dropdown-menu dropdown-menu-end custom-dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item custom-dropdown-item text-dark" href="{% url 'edit_deck' deck.id %}">
+                                        <i class="ph-duotone ph-pencil-simple me-2 fs-5 text-primary"></i> Sửa thông tin
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider border-light my-1"></li>
+                                <li>
+                                    <form action="{% url 'delete_deck' deck.id %}" method="POST" id="delete-form-{{ deck.id }}">
+                                        {% csrf_token %}
+                                        <button type="button" class="dropdown-item custom-dropdown-item delete-item w-100 text-start" onclick="confirmDelete('{{ deck.id }}')">
+                                            <i class="ph-duotone ph-trash me-2 fs-5"></i> Xóa bộ thẻ
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
                 
                 <h5 class="card-title fw-bold">{{ deck.title }}</h5>
                 <p class="card-text text-muted small">{{ deck.description|truncatechars:60 }}</p>
                 
                 <div class="mt-4 d-flex gap-2">
-                    <a href="{% url 'arena' deck.id %}" class="btn btn-yellow btn-glow flex-grow-1">
+                    <a href="{% url 'arena' deck.id %}" class="btn btn-yellow btn-glow flex-grow-1 fw-bold">
                         <i class="ph-fill ph-play me-1"></i> Học ngay
                     </a>
-                    <a href="{% url 'add_card' deck.id %}" class="btn btn-light border">
-                        <i class="ph ph-pencil-simple"></i>
+                    <a href="{% url 'add_card' deck.id %}" class="btn btn-light border" title="Quản lý từ vựng">
+                        <i class="ph ph-list-plus fs-5"></i>
                     </a>
                 </div>
+                
             </div>
         </div>
     </div>
     {% empty %}
+    <div class="col-12 text-center py-5 text-muted" data-aos="fade-up">
+        <i class="ph-duotone ph-empty fs-1 mb-3"></i>
+        <p>Bạn chưa có bộ thẻ nào. Hãy tạo bộ thẻ đầu tiên nhé!</p>
+    </div>
     {% endfor %}
 </div>
 
