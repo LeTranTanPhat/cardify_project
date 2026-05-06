@@ -1,0 +1,97 @@
+{% extends 'flashcards/base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+
+<div class="profile-container container mt-4" data-aos="fade-up">
+    <div class="row g-4">
+        
+        <div class="col-lg-7">
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="avatar-wrapper">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                    <div class="user-meta">
+                        <h2>{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</h2>
+                        <p>@{{ user.username }}</p>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <i class="ph-fill ph-lightning"></i>
+                        <span class="value">{{ user.profile.energy|default:"0" }}</span>
+                        <span class="label">Năng lượng</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="ph-fill ph-heart"></i>
+                        <span class="value">{{ user.profile.hearts|default:"0" }}</span>
+                        <span class="label">Sinh lực</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="ph-fill ph-crown"></i>
+                        <span class="value">{{ user.profile.level|default:"1" }}</span>
+                        <span class="label">Cấp độ</span>
+                    </div>
+                </div>
+
+                <div class="section-title">
+                    <i class="ph ph-user-circle"></i> Thông tin cá nhân
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Email</span>
+                    <span class="info-value">{{ user.email|default:"Chưa cập nhật" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tên đăng nhập</span>
+                    <span class="info-value">{{ user.username }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Ngày tham gia</span>
+                    <span class="info-value">{{ user.date_joined|date:"d/m/Y" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="profile-card">
+                <div class="section-title">
+                    <i class="ph ph-shield-check"></i> Đổi mật khẩu
+                </div>
+                
+                <form method="POST" action="{% url 'change_password' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Mật khẩu hiện tại</label>
+                        <input type="password" name="old_password" class="custom-input" placeholder="••••••••" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mật khẩu mới</label>
+                        <input type="password" name="new_password" class="custom-input" placeholder="Tối thiểu 6 ký tự" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Xác nhận mật khẩu mới</label>
+                        <input type="password" name="confirm_password" class="custom-input" placeholder="Nhập lại mật khẩu mới" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-change-pwd">
+                        Cập nhật mật khẩu
+                    </button>
+                </form>
+            </div>
+
+            <form id="logout-form" method="POST" action="{% url 'logout' %}" style="display: none;">
+                {% csrf_token %}
+            </form>
+            
+            <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="btn-logout-outline mt-3">
+                <i class="ph ph-sign-out"></i> Đăng xuất tài khoản
+            </a>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

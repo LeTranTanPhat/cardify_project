@@ -1,0 +1,28 @@
+{% extends 'flashcards/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="fw-bold mb-4"><i class="ph-fill ph-users text-primary"></i> Kho thẻ cộng đồng</h3>
+    
+    <div class="row g-4">
+        {% for deck in public_decks %}
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100 rounded-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">{{ deck.title }}</h5>
+                    <p class="text-muted small">Tác giả: {{ deck.user.username }}</p>
+                    <p class="card-text">{{ deck.description }}</p>
+                    <a href="{% url 'arena' deck.id %}" class="btn btn-outline-primary btn-sm rounded-pill">
+                        Học bộ thẻ này
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center text-muted py-5">
+            <p>Hiện chưa có ai chia sẻ bộ thẻ nào lên cộng đồng.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -8,7 +8,7 @@
 
 <div class="row g-4">
     <div class="col-md-4 col-lg-3" data-aos="zoom-in">
-        <a href="{% url 'create_deck' %}" class="text-decoration-none">
+        <a href="{% url 'create_deck' %}" id="create-deck-btn" class="text-decoration-none">
             <div class="card h-100 border-dashed d-flex align-items-center justify-content-center p-4 text-muted" 
                  style="border: 2px dashed #ccc; background: transparent;">
                 <div class="text-center">
@@ -31,6 +31,16 @@
                     <i class="ph-duotone ph-cards text-warning fs-1"></i>
                     
                     <div class="d-flex align-items-center gap-2">
+                        {% if deck.language == 'en' %}
+                            <span class="badge bg-primary text-white"><i class="ph-fill ph-flag"></i> Tiếng Anh</span>
+                        {% elif deck.language == 'zh' %}
+                            <span class="badge bg-danger text-white"><i class="ph-fill ph-flag"></i> Tiếng Trung</span>
+                        {% elif deck.language == 'ko' %}
+                            <span class="badge bg-info text-dark"><i class="ph-fill ph-flag"></i> Tiếng Hàn</span>
+                        {% else %}
+                            <span class="badge bg-secondary text-white">{{ deck.language|default:"Chung" }}</span>
+                        {% endif %}
+
                         <span class="badge bg-light text-dark border">{{ deck.cards.count }} thẻ</span>
                         
                         <div class="dropdown">
@@ -65,7 +75,7 @@
                     <a href="{% url 'arena' deck.id %}" class="btn btn-yellow btn-glow flex-grow-1 fw-bold">
                         <i class="ph-fill ph-play me-1"></i> Học ngay
                     </a>
-                    <a href="{% url 'add_card' deck.id %}" class="btn btn-light border" title="Quản lý từ vựng">
+                    <a href="{% url 'add_card' deck.id %}" class="btn btn-light border add-card-btn" title="Quản lý từ vựng">
                         <i class="ph ph-list-plus fs-5"></i>
                     </a>
                 </div>
@@ -81,4 +91,88 @@
     {% endfor %}
 </div>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const word = urlParams.get('word');
+        const meaning = urlParams.get('meaning');
+        const lang = urlParams.get('lang');
+
+        if (word && meaning) {
+            
+            // 1. Lấy danh sách các bộ thẻ hiện có của bạn (Từ Django truyền vào JS)
+            const deckOptions = {
+                {% for deck in decks %}
+                '{{ deck.id }}': '{{ deck.title|escapejs }} ({{ deck.cards.count }} thẻ)',
+                {% endfor %}
+            };
+
+            // Lấy sẵn các đường link tạo thẻ tương ứng
+            const deckUrls = {
+                {% for deck in decks %}
+                '{{ deck.id }}': '{% url "add_card" deck.id %}',
+                {% endfor %}
+            };
+
+            // Kịch bản A: Nếu bạn CHƯA CÓ bộ thẻ nào cả
+            if (Object.keys(deckOptions).length === 0) {
+                Swal.fire({
+                    title: 'Chưa có bộ thẻ nào!',
+                    html: `Bạn cần tạo một bộ thẻ trước khi lưu từ <b>"${word}"</b>.`,
+                    icon: 'warning',
+                    confirmButtonText: 'Tạo bộ thẻ mới',
+                    confirmButtonColor: '#FFD700',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `{% url 'create_deck' %}?word=${encodeURIComponent(word)}&meaning=${encodeURIComponent(meaning)}&lang=${encodeURIComponent(lang)}`;
+                    }
+                });
+                return; // Dừng tại đây
+            }
+
+            // Kịch bản B: Hiện Popup cho phép CHỌN THẲNG bộ thẻ
+            Swal.fire({
+                title: 'Lưu từ vựng vào đâu?',
+                html: `Từ: <b class="text-primary">${word}</b><br>Nghĩa: <b>${meaning}</b><br><br>Vui lòng chọn bộ thẻ bạn muốn thêm vào:`,
+                icon: 'question',
+                input: 'select',
+                inputOptions: deckOptions, // Đổ danh sách bộ thẻ vào đây
+                inputPlaceholder: '--- Nhấn để chọn bộ thẻ ---',
+                showCancelButton: true,
+                confirmButtonText: 'Đi tới thẻ này <i class="ph-bold ph-arrow-right"></i>',
+                cancelButtonText: 'Để sau',
+                confirmButtonColor: '#FFD700',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Bạn phải chọn một bộ thẻ để tiếp tục!';
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Chuyển hướng THẲNG đến trang tạo thẻ của bộ thẻ vừa chọn
+                    const deckId = result.value;
+                    const targetUrl = deckUrls[deckId];
+                    window.location.href = `${targetUrl}?word=${encodeURIComponent(word)}&meaning=${encodeURIComponent(meaning)}&lang=${encodeURIComponent(lang)}`;
+                }
+            });
+
+            // --- GIỮ LẠI TÍNH NĂNG DỰ PHÒNG ---
+            // Đề phòng trường hợp người dùng bấm "Để sau" tắt popup, 
+            // ta vẫn nhét sẵn data vào các nút trên màn hình
+            const addCardLinks = document.querySelectorAll('.add-card-btn');
+            addCardLinks.forEach(link => {
+                const originalHref = link.getAttribute('href');
+                const separator = originalHref.includes('?') ? '&' : '?';
+                link.setAttribute('href', `${originalHref}${separator}word=${encodeURIComponent(word)}&meaning=${encodeURIComponent(meaning)}&lang=${encodeURIComponent(lang)}`);
+            });
+
+            const createDeckBtn = document.getElementById('create-deck-btn');
+            if (createDeckBtn) {
+                const originalHref = createDeckBtn.getAttribute('href');
+                const separator = originalHref.includes('?') ? '&' : '?';
+                createDeckBtn.setAttribute('href', `${originalHref}${separator}word=${encodeURIComponent(word)}&meaning=${encodeURIComponent(meaning)}&lang=${encodeURIComponent(lang)}`);
+            }
+        }
+    });
+</script>
 {% endblock %}

@@ -3,7 +3,6 @@
 
 {% block content %}
 <style>
-    /* CSS TRỰC TIẾP ĐỂ ĐẢM BẢO KHÔNG BỊ LỖI CACHE */
     .arena-wrapper {
         max-width: 600px;
         margin: 0 auto;
@@ -32,7 +31,7 @@
     }
 
     .card-face {
-        position: absolute; /* Bắt buộc để 2 mặt đè lên nhau */
+        position: absolute;
         top: 0; left: 0;
         width: 100%; height: 100%;
         backface-visibility: hidden;
@@ -46,15 +45,13 @@
         text-align: center;
         box-shadow: 0 15px 45px rgba(0,0,0,0.08);
         border: 2px solid var(--border-color);
-        background-color: white; /* Màu mặc định */
+        background-color: white;
     }
 
-    .card-front {
-        z-index: 2;
-    }
+    .card-front { z-index: 2; }
 
     .card-back {
-        background-color: var(--soft-yellow) !important;
+        background-color: #fff9db !important; /* var(--soft-yellow) */
         color: #B8860B;
         transform: rotateY(180deg);
     }
@@ -68,7 +65,7 @@
 
 <div class="arena-wrapper mt-3">
     <div class="text-center" data-aos="fade-down">
-        <h2 class="fw-bold mb-1" style="color: var(--dark-text);">
+        <h2 class="fw-bold mb-1" style="color: #2d3436;">
             <i class="ph-duotone ph-sword text-warning"></i> {{ deck.title }}
         </h2>
         
@@ -116,28 +113,29 @@
 </div>
 
 <script>
-    // 1. Dữ liệu thẻ từ Django
+    // 1. Dữ liệu thẻ (Đã thêm ID để lưu tiến độ)
     const deckCards = [
         {% for card in cards %}
-            { front: "{{ card.front_side|escapejs }}", back: "{{ card.back_side|escapejs }}" },
+            { 
+                id: "{{ card.id }}", 
+                front: "{{ card.front_side|escapejs }}", 
+                back: "{{ card.back_side|escapejs }}" 
+            },
         {% endfor %}
     ];
 
     let currentIndex = 0;
-    // Lấy số máu thật từ Database khi load trang
     let hearts = {{ user.profile.hearts|default:5 }};
+    let correctAnswers = 0; // Theo dõi số câu đúng trong phiên này
 
     const cardElement = document.getElementById('myCard');
     const frontText = document.getElementById('card-front-text');
     const backText = document.getElementById('card-back-text');
     const controls = document.getElementById('action-controls');
     const progressText = document.getElementById('progress-text');
-    
-    // Các phần tử hiển thị máu
     const heartDisplay = document.getElementById('heart-display');
-    const navHearts = document.getElementById('nav-hearts'); // Nếu bạn có thanh máu ở Top Navbar
+    const navHeartsCount = document.getElementById('nav-hearts-count'); 
 
-    // 2. Hàm lật thẻ
     function flipCard() {
         if (!cardElement.classList.contains('is-flipped')) {
             cardElement.classList.add('is-flipped');
@@ -145,25 +143,15 @@
         }
     }
 
-    // 3. Hàm tải nội dung thẻ
     function loadCard() {
         if (currentIndex >= deckCards.length) {
-            Swal.fire({
-                title: '🎉 Hoàn thành!',
-                text: 'Bạn đã xem hết các thẻ trong bộ này.',
-                icon: 'success',
-                confirmButtonColor: '#FFD700'
-            }).then(() => {
-                window.location.href = "{% url 'dashboard' %}";
-            });
+            finishSession();
             return;
         }
 
-        // Reset trạng thái thẻ
         cardElement.classList.remove('is-flipped');
         controls.style.display = 'none';
 
-        // Đợi hiệu ứng lật ngược lại rồi mới đổi chữ
         setTimeout(() => {
             frontText.innerText = deckCards[currentIndex].front;
             backText.innerText = deckCards[currentIndex].back;
@@ -171,59 +159,127 @@
         }, 150);
     }
 
-    // 4. Hàm đánh giá (Nhớ/Quên) và Xử lý trừ máu
+    // Hàm gọi API lưu tiến độ thẻ (CardProgress)
+    async function saveCardProgress(cardId, isRemembered) {
+        try {
+            await fetch('/api/record-interaction/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    card_id: cardId,
+                    is_remembered: isRemembered
+                })
+            });
+        } catch (error) {
+            console.error("Không thể lưu tiến độ thẻ:", error);
+        }
+    }
+
     function markCard(isRemembered) {
+        const currentCardId = deckCards[currentIndex].id;
+        
+        // Ghi lại tiến độ ngay lập tức (chạy ngầm)
+        saveCardProgress(currentCardId, isRemembered);
+
         if (!isRemembered) {
-            // NẾU BẤM QUÊN: Gọi API Server để trừ máu
+            // XỬ LÝ KHI QUÊN
             fetch('/reduce-heart/', { 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}' // Thêm token của Django để không bị lỗi 403 Forbidden
+                    'X-CSRFToken': '{{ csrf_token }}'
                 }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.hearts !== undefined) {
                     hearts = data.hearts;
-                    
-                    // Cập nhật số máu lên màn hình Đấu trường
                     heartDisplay.innerHTML = `<i class="ph-fill ph-heart"></i> ${hearts}`;
-                    
-                    // Cập nhật Navbar ở góc trên (nếu có)
-                    if (navHearts) navHearts.innerHTML = `❤️ ${hearts}/5`;
+                    if (navHeartsCount) navHeartsCount.innerText = `${hearts}/5`;
 
-                    // Kiểm tra nếu hết máu
                     if (hearts <= 0) {
-                        Swal.fire({
-                            title: 'Hết máu rồi! 💔',
-                            text: 'Trí não đang quá tải. Hãy vào Trạm Hồi Máu Pomodoro để nạp năng lượng nhé!',
-                            icon: 'warning',
-                            confirmButtonColor: '#FFD700',
-                            confirmButtonText: 'Về trang chủ',
-                            allowOutsideClick: false
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = "{% url 'dashboard' %}";
-                            }
-                        });
-                        return; // Dừng lại, không tải thẻ tiếp theo nữa
+                        showGameOver();
                     } else {
-                        // Máu > 0 thì cho đi tiếp câu sau
                         currentIndex++;
                         loadCard();
                     }
                 }
-            })
-            .catch(err => console.error("Lỗi đồng bộ máu:", err));
+            });
         } else {
-            // NẾU BẤM NHỚ: Không trừ máu, sang thẻ luôn
+            // XỬ LÝ KHI NHỚ
+            correctAnswers++;
+            if (typeof gainXP === 'function') {
+                gainXP(15);
+            }
             currentIndex++;
             loadCard();
         }
     }
 
-    // 5. Khởi chạy thẻ đầu tiên
+    // HÀM QUAN TRỌNG ĐÃ ĐƯỢC SỬA ĐỂ LƯU LỊCH SỬ VÀO DATABASE
+    async function finishSession() {
+        // 1. Tính tổng XP đạt được (Ví dụ: 15 XP mỗi câu đúng + 50 XP hoàn thành)
+        let totalXpGained = (correctAnswers * 15) + 50;
+
+        // 2. Gọi hàm cộng XP trên giao diện (nếu có)
+        if (typeof gainXP === 'function') gainXP(50);
+
+        // 3. GỌI API LƯU LỊCH SỬ PHIÊN HỌC VÀO DATABASE
+        try {
+            await fetch('/api/save-session/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    deck_id: "{{ deck.id }}",
+                    cards_reviewed: deckCards.length,
+                    correct_answers: correctAnswers,
+                    xp_gained: totalXpGained
+                })
+            });
+        } catch (error) {
+            console.error("Lỗi khi lưu lịch sử:", error);
+        }
+
+        // 4. Hiển thị thông báo và chuyển hướng
+        const accuracy = deckCards.length > 0 ? Math.round((correctAnswers / deckCards.length) * 100) : 0;
+
+        Swal.fire({
+            title: '🎉 Hoàn thành phiên học!',
+            html: `
+                <div class="mt-2">
+                    <p>Bạn đã xem hết <b>${deckCards.length}</b> thẻ.</p>
+                    <p>Tỷ lệ nhớ: <span class="badge bg-success fs-6">${accuracy}%</span></p>
+                    <p>XP nhận được: <span class="text-warning fw-bold">+${totalXpGained}</span></p>
+                </div>
+            `,
+            icon: 'success',
+            confirmButtonText: 'Xem lịch sử học tập',
+            confirmButtonColor: '#27ae60'
+        }).then(() => {
+            // Chuyển thẳng sang trang lịch sử để xem thành quả
+            window.location.href = "{% url 'study_history' %}";
+        });
+    }
+
+    function showGameOver() {
+        Swal.fire({
+            title: 'Hết máu rồi! 💔',
+            text: 'Hãy nghỉ ngơi tại Trạm Pomodoro để hồi phục trí lực.',
+            icon: 'warning',
+            confirmButtonText: 'Về trang chủ',
+            allowOutsideClick: false
+        }).then(() => {
+            window.location.href = "{% url 'dashboard' %}";
+        });
+    }
+
+    // Khởi chạy
     loadCard();
 </script>
 {% endblock %}

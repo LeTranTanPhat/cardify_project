@@ -1,0 +1,199 @@
+/* ==========================================================================
+   4. TRẠM HỒI NĂNG LƯỢNG (POMODORO)
+   ========================================================================== */
+   .timer-circle {
+    width: 320px; 
+    height: 320px; 
+    border-radius: 50%;
+    background-color: var(--white); 
+    border: 12px solid #f0f0f0;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    margin: 0 auto; 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.timer-text { 
+    font-size: 4.5rem; 
+    font-weight: 700; 
+    font-family: 'Orbitron', sans-serif; 
+    color: var(--dark-text); 
+    z-index: 2;
+}
+
+.timer-circle.running { 
+    border-color: var(--primary-yellow); 
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.3); 
+    animation: chargingPulse 2s infinite; 
+}
+
+.timer-circle.running::after {
+    content: "";
+    position: absolute;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    border: 2px solid var(--primary-yellow);
+    animation: ripple 2s infinite;
+    opacity: 0;
+}
+
+@keyframes chargingPulse { 
+    0% { transform: scale(1); } 
+    50% { transform: scale(1.02); } 
+    100% { transform: scale(1); } 
+}
+
+@keyframes ripple {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(1.4); opacity: 0; }
+}
+
+.btn-timer {
+    padding: 15px 50px;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+.pomodoro-tips {
+    max-width: 500px;
+    border: 1px solid var(--border-color);
+    background-color: var(--white);
+    font-style: italic;
+}
+
+/* ==========================================================================
+   8. FLASHCARD ITEM (QUẢN LÝ TỪ VỰNG MẶT TRƯỚC/SAU)
+   ========================================================================== */
+   .flashcard-item {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    position: relative;
+    background: var(--white);
+    border: 1px solid var(--border-color) !important;
+}
+
+.flashcard-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.06) !important;
+    border-color: var(--primary-yellow) !important;
+}
+
+.card-actions {
+    opacity: 0.3;
+    transition: opacity 0.2s ease;
+}
+
+.flashcard-item:hover .card-actions {
+    opacity: 1;
+}
+
+/* ==========================================================================
+   10. GIAO DIỆN HỌC THẺ (ARENA / STUDY)
+   ========================================================================== */
+   .arena-wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.scene {
+    width: 100%;
+    height: 380px;
+    perspective: 2000px;
+    margin: 2rem 0;
+    position: relative;
+}
+
+.flashcard {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-style: preserve-3d;
+    cursor: pointer;
+}
+
+.flashcard.is-flipped {
+    transform: rotateY(180deg);
+}
+
+.card-face {
+    position: absolute !important; /* ÉP BUỘC Bootstrap không được can thiệp */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden; /* Hỗ trợ Safari */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 28px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 15px 45px rgba(0,0,0,0.08);
+    border: 2px solid var(--border-color) !important;
+    background-color: var(--white); /* Đảm bảo luôn có màu nền */
+}
+
+/* Mặt trước */
+.card-front {
+    z-index: 2; /* Luôn nổi lên trên cùng lúc chưa lật */
+    color: var(--dark-text);
+}
+
+.card-front::after {
+    content: "CÂU HỎI";
+    position: absolute;
+    top: 25px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: #b2bec3;
+}
+
+/* Mặt sau - Đã lật sẵn 180 độ */
+.card-back {
+    background-color: var(--soft-yellow) !important; /* Đè màu trắng mặc định */
+    color: #B8860B;
+    transform: rotateY(180deg); 
+    border-color: var(--primary-yellow) !important;
+}
+
+.card-back::after {
+    content: "ĐÁP ÁN";
+    position: absolute;
+    top: 25px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: var(--primary-orange);
+}
+
+.card-content {
+    font-size: 2.5rem;
+    font-weight: 800;
+    word-break: break-word;
+    line-height: 1.2;
+    margin-bottom: 10px;
+}
+
+.instruction-label {
+    font-weight: 600;
+    color: #a0a0a0;
+    margin-top: 15px;
+    transition: all 0.3s;
+}
+
+.flashcard:hover:not(.is-flipped) {
+    transform: translateY(-10px);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.12);
+}
+
+.flashcard:hover .instruction-label {
+    color: var(--primary-orange);
+}   

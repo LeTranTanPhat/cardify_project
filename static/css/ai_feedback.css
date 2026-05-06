@@ -1,0 +1,133 @@
+/* ==========================================================================
+   AI EXPERIENCE & FEEDBACK UI STYLES
+   ========================================================================== */
+
+/* --- 1. VÙNG KÉO THẢ (DRAG & DROP ZONE) --- */
+.ai-dropzone {
+    border: 2px dashed #CBD5E1;
+    border-radius: 20px;
+    padding: 60px 20px;
+    text-align: center;
+    background-color: #F8FAFC;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    margin-bottom: 24px;
+}
+
+.ai-dropzone:hover {
+    border-color: #FFD700;
+    background-color: #FFFDF0;
+}
+
+/* Class được add bằng JS khi đang kéo file qua */
+.ai-dropzone.dragover {
+    border-color: #FF9800;
+    background-color: #FFFDF0;
+    transform: scale(1.02);
+    box-shadow: 0 10px 25px rgba(255, 152, 0, 0.1);
+}
+
+.ai-dropzone i {
+    font-size: 3.5rem;
+    color: #94A3B8;
+    margin-bottom: 15px;
+    transition: color 0.3s ease;
+}
+
+.ai-dropzone.dragover i {
+    color: #FFD700;
+}
+
+/* Ẩn input file mặc định */
+.ai-file-input {
+    display: none;
+}
+
+/* --- 2. HIỆU ỨNG SKELETON LOADING --- */
+.skeleton-wrapper {
+    display: none; /* Sẽ được bật bằng JS */
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
+
+.skeleton-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.skeleton-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #E2E8F0;
+}
+
+.skeleton-line {
+    height: 14px;
+    background: #E2E8F0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.skeleton-line.short { width: 40%; }
+.skeleton-line.medium { width: 70%; }
+.skeleton-line.long { width: 100%; }
+
+/* Animation vệt sáng chạy qua */
+.skeleton-circle::after,
+.skeleton-line::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* --- 3. TOAST NOTIFICATION (THÔNG BÁO) --- */
+.custom-toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.custom-toast {
+    background: #FFFFFF;
+    border-left: 4px solid #FFD700;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transform: translateX(150%);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.custom-toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.custom-toast.success { border-left-color: #22C55E; }
+.custom-toast.success i { color: #22C55E; }
+
+.custom-toast.error { border-left-color: #EF4444; }
+.custom-toast.error i { color: #EF4444; }

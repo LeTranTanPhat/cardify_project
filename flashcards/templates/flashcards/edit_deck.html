@@ -13,9 +13,9 @@
             </a>
             <div>
                 <h3 class="fw-bold mb-0" style="color: var(--dark-text);">
-                    <i class="ph-duotone ph-wrench text-warning"></i> CHỈNH SỬA BỘ THẺ
+                    <i class="ph-duotone ph-wrench text-warning"></i> CHỈNH SỬA BỘ THẺ
                 </h3>
-                <p class="text-muted mb-0 fs-5">Bộ thẻ: <span class="fw-bold text-dark">{{ deck.title }}</span></p>
+                <p class="text-muted mb-0 fs-5">Bộ thẻ: <span class="fw-bold text-dark">{{ deck.title }}</span></p>
             </div>
         </div>
 
@@ -29,6 +29,17 @@
                         <i class="ph-fill ph-tag me-1 text-warning"></i> Tên bộ thẻ
                     </label>
                     <input type="text" name="title" class="form-control bg-light shadow-none rounded-3 p-3 fs-5 fw-bold text-dark" required value="{{ deck.title }}" placeholder="Nhập tên bộ thẻ...">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-muted small text-uppercase">
+                        <i class="ph-fill ph-globe-hemisphere-west me-1 text-warning"></i> Ngôn ngữ
+                    </label>
+                    <select name="language" class="form-select bg-light shadow-none rounded-3 p-3 fs-6 text-dark" required>
+                        <option value="en" {% if deck.language == 'en' %}selected{% endif %}>🇬🇧 Tiếng Anh</option>
+                        <option value="zh" {% if deck.language == 'zh' %}selected{% endif %}>🇨🇳 Tiếng Trung</option>
+                        <option value="ko" {% if deck.language == 'ko' %}selected{% endif %}>🇰🇷 Tiếng Hàn</option>
+                    </select>
                 </div>
                 
                 <div class="mb-4">

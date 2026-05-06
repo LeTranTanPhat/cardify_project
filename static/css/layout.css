@@ -1,0 +1,144 @@
+/* ==========================================================================
+   1. LAYOUT CHÍNH (SIDEBAR & CONTENT AREA)
+   ========================================================================== */
+   .main-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--white);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    height: 100vh;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+}
+
+.brand-logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--dark-text);
+    text-decoration: none;
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-menu {
+    list-style: none;
+    padding: 0;
+    flex-grow: 1;
+}
+
+.nav-item {
+    margin-bottom: 0.5rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    color: var(--dark-text);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+.nav-link:hover, .nav-link.active {
+    background-color: var(--soft-yellow);
+    color: #B8860B;
+}
+
+.nav-link i {
+    margin-right: 12px;
+    font-size: 1.2rem;
+}
+
+.content-area {
+    margin-left: var(--sidebar-width);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* ==========================================================================
+   2. TOP NAVBAR & USER STATUS
+   ========================================================================== */
+.top-navbar {
+    height: 70px;
+    background-color: var(--white);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center; 
+    justify-content: flex-end; 
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.user-status-wrapper {
+    display: flex;
+    align-items: center; 
+    gap: 1.2rem;
+}
+
+.energy-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8f9fa;
+    padding: 6px 14px;
+    border-radius: 50px;
+    border: 1px solid var(--border-color);
+}
+
+.energy-progress {
+    width: 100px;
+    height: 10px !important;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0;
+}
+
+.energy-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-yellow), var(--primary-orange));
+    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.stat-badge {
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.heart-badge { color: var(--danger-red); background: var(--soft-red); border: 1px solid #feb2b2; }
+.level-badge { color: #B8860B; background: var(--soft-yellow); border: 1px solid #faf089; }
+
+/* ==========================================================================  
+   3. RESPONSIVE (MOBILE & TABLET)
+   ========================================================================== */
+.menu-toggle { display: none; font-size: 1.5rem; background: none; border: none; }
+
+@media (max-width: 768px) {
+    .menu-toggle { display: block; }
+    .sidebar { transform: translateX(-100%); transition: 0.3s; }
+    .sidebar.active { transform: translateX(0); }
+    .content-area { margin-left: 0; }
+    .top-navbar { justify-content: space-between; padding: 0 1rem; }
+    .energy-bar-container, .username-text { display: none; }
+}

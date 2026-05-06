@@ -11,12 +11,21 @@
                 <p class="text-muted">Xây dựng kho tàng kiến thức của riêng bạn</p>
             </div>
             
-            <form method="POST">
+            <form method="POST" id="createDeckForm">
                 {% csrf_token %}
                 
                 <div class="mb-3">
                     <label class="form-label fw-bold text-muted">Tên bộ thẻ</label>
                     <input type="text" name="title" class="form-control form-control-lg bg-light border-0 shadow-none" placeholder="VD: Tiếng Anh giao tiếp..." required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-muted">Ngôn ngữ</label>
+                    <select name="language" id="id_language" class="form-select form-control-lg bg-light border-0 shadow-none" required>
+                        <option value="en">🇬🇧 Tiếng Anh</option>
+                        <option value="zh">🇨🇳 Tiếng Trung</option>
+                        <option value="ko">🇰🇷 Tiếng Hàn</option>
+                    </select>
                 </div>
                 
                 <div class="mb-4">
@@ -44,4 +53,38 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const word = urlParams.get('word');
+        const meaning = urlParams.get('meaning');
+        const lang = urlParams.get('lang');
+
+        // 1. Tự động chọn đúng ngôn ngữ nếu có truyền sang từ url
+        if (lang) {
+            const langSelect = document.getElementById('id_language');
+            if (langSelect) {
+                langSelect.value = lang;
+            }
+        }
+
+        // 2. Nếu đang ôm theo từ vựng, gắn URL params vào form action 
+        // để khi submit sang views.py, params không bị mất đi
+        if (word && meaning) {
+            const form = document.getElementById('createDeckForm');
+            form.action = `?word=${encodeURIComponent(word)}&meaning=${encodeURIComponent(meaning)}&lang=${encodeURIComponent(lang)}`;
+            
+            // Hiện thông báo nhỏ cho người dùng biết
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'info',
+                title: `Đang tạo bộ thẻ cho từ "${word}"`,
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+    });
+</script>
 {% endblock %}

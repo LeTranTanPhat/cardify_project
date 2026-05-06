@@ -1,0 +1,26 @@
+/* ==========================================================================
+   1. BIẾN VÀ CẤU HÌNH CHUNG
+   ========================================================================== */
+   :root {
+    --primary-yellow: #FFD700;
+    --primary-orange: #FF9800;
+    --soft-yellow: #FFF9E3;
+    --dark-text: #2D3436;
+    --light-gray: #F4F7F6;
+    --white: #FFFFFF;
+    --border-color: #E0E0E0;
+    --sidebar-width: 260px;
+    --danger-red: #dc3545;
+    --soft-red: #fff5f5;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--light-gray);
+    color: var(--dark-text);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+}

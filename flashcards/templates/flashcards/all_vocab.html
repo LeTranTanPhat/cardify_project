@@ -20,7 +20,7 @@
                             <i class="ph-bold ph-trash"></i> Xóa tất cả
                         </button>
                         <button class="btn btn-sm btn-outline-success fw-bold rounded-pill" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                            <i class="ph-bold ph-upload-simple"></i> Upload File CSV
+                            <i class="ph-bold ph-upload-simple"></i> Tải lên File (CSV/Excel)
                         </button>
                     </div>
 
@@ -86,12 +86,12 @@
             <form action="{% url 'upload_csv' %}" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="fw-bold"><i class="ph-fill ph-file-csv text-success"></i> Thêm từ vựng hàng loạt</h5>
+                    <h5 class="fw-bold"><i class="ph-fill ph-file-xls text-success"></i> Thêm từ vựng hàng loạt</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted small mb-3">Vui lòng chuẩn bị file Excel có 3 cột: <b>Word</b>, <b>Meaning</b>, <b>Language</b> (en, zh, ko) và lưu dưới dạng <b>.CSV (UTF-8)</b>.</p>
-                    <input class="form-control bg-light" type="file" name="csv_file" accept=".csv" required>
+                    <p class="text-muted small mb-3">Vui lòng chuẩn bị file có 3 cột: <b>Word</b>, <b>Meaning</b>, <b>Language</b> (en, zh, ko) và lưu dưới dạng <b>CSV</b> hoặc <b>Excel (.xlsx, .xls)</b>.</p>
+                    <input class="form-control bg-light" type="file" name="csv_file" accept=".csv, .xlsx, .xls" required>
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-light rounded-pill fw-bold" data-bs-dismiss="modal">Hủy</button>
@@ -161,7 +161,7 @@
                     <td class="fw-bold fs-5" style="color: var(--dark-text);">${item.word}</td>
                     <td class="text-muted">${item.meaning}</td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-light border shadow-none text-warning fw-bold rounded-pill px-3" onclick="saveToDeck('${item.word}')">
+                        <button class="btn btn-sm btn-light border shadow-none text-warning fw-bold rounded-pill px-3" onclick="saveToDeck('${item.word}', '${item.meaning}', '${item.lang}')">
                             <i class="ph-bold ph-plus"></i> Tạo thẻ
                         </button>
                     </td>
@@ -238,7 +238,7 @@
         window.scrollTo({ top: 0, behavior: 'smooth' }); 
     }
 
-    function saveToDeck(word) {
+    function saveToDeck(word, meaning, lang) {
         Swal.fire({
             title: 'Chuyển sang tạo thẻ?',
             text: `Bạn muốn tạo flashcard cho từ "${word}" chứ?`,
@@ -250,12 +250,14 @@
             cancelButtonText: 'Hủy'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = "{% url 'dashboard' %}";
+                // Nối thêm parameters vào URL để mang dữ liệu sang trang tạo thẻ
+                // (Bạn thay 'tên_url_tạo_thẻ' bằng url thực tế của bạn nhé, ví dụ 'create_card' hoặc 'dashboard')
+                const targetUrl = `{% url 'dashboard' %}?word=${encodeURIComponent(word)}&meaning=${encodeURIComponent(meaning)}&lang=${encodeURIComponent(lang)}`;
+                window.location.href = targetUrl;
             }
         });
     }
 
-    // ĐÃ THÊM HÀM XỬ LÝ NÚT XÓA TẤT CẢ Ở ĐÂY
     function confirmDeleteAll() {
         Swal.fire({
             title: 'Xóa toàn bộ từ vựng?',
@@ -268,7 +270,6 @@
             cancelButtonText: 'Hủy'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Submit form ẩn để gọi views thực hiện xóa
                 document.getElementById('deleteAllForm').submit();
             }
         });

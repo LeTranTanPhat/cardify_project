@@ -1,0 +1,247 @@
+/* ==========================================================================
+   15. AUTHENTICATION (LOGIN & REGISTER PAGES) - REDESIGNED
+   ========================================================================== */
+   .auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #F8FAFC; /* Nền sáng, sạch sẽ hơn */
+    /* Gradient ánh sáng mềm mại và hiện đại hơn */
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(255, 215, 0, 0.08), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(108, 92, 231, 0.05), transparent 25%);
+    padding: 20px;
+}
+
+/* Thẻ Form */
+.auth-card {
+    width: 100%;
+    max-width: 420px; /* Thu gọn lại một chút để form nhìn cân đối, thanh lịch hơn */
+    background: var(--white);
+    border-radius: 24px;
+    padding: 3rem 2.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); /* Bóng đổ sâu và mềm hơn */
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    position: relative;
+    overflow: hidden;
+    animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Viền màu trang trí mỏng và tinh tế hơn */
+.auth-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-yellow), #FFA000);
+}
+
+/* Phần Tiêu đề */
+.auth-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.auth-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--soft-yellow) 0%, #FFF4cc 100%);
+    color: #E6A300;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 8px 16px rgba(230, 163, 0, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-card:hover .auth-icon {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 20px rgba(230, 163, 0, 0.2);
+}
+
+.auth-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--dark-text);
+    margin-bottom: 0.4rem;
+    font-family: 'Inter', sans-serif; /* Đổi về Inter, bỏ Orbitron */
+    letter-spacing: -0.5px; /* Giúp chữ tiêu đề nhìn chặt chẽ, hiện đại hơn */
+}
+
+.auth-subtitle {
+    color: #64748B; /* Màu xám dịu mắt hơn */
+    font-size: 0.95rem;
+    font-weight: 400;
+}
+
+/* Ô nhập liệu có Icon */
+.auth-form-group {
+    margin-bottom: 1.2rem;
+    text-align: left;
+    position: relative; /* Để định vị icon bên trong */
+}
+
+.auth-label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #334155;
+    margin-bottom: 0.5rem;
+}
+
+/* Biểu tượng nằm trong ô input */
+.input-icon {
+    position: absolute;
+    left: 16px;
+    bottom: 14px;
+    font-size: 1.2rem;
+    color: #94A3B8;
+    transition: color 0.3s ease;
+}
+
+/* Chỉnh lại padding của ô input để chữ không bị đè vào icon con mắt bên phải */
+.auth-input {
+    width: 100%;
+    /* Tăng padding bên phải lên 44px (trên phải dưới trái) */
+    padding: 14px 44px 14px 44px; 
+    border-radius: 12px !important;
+    border: 1.5px solid #E2E8F0 !important;
+    background-color: var(--white) !important;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    color: var(--dark-text);
+    font-weight: 500;
+}
+
+/* Icon con mắt hiện/ẩn mật khẩu */
+.toggle-password {
+    position: absolute;
+    right: 16px;
+    bottom: 14px;
+    font-size: 1.2rem;
+    color: #94A3B8;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    z-index: 10; /* Đảm bảo icon luôn nổi lên trên để click được */
+}
+
+/* Hiệu ứng khi di chuột vào icon con mắt */
+.toggle-password:hover {
+    color: var(--primary-yellow);
+}
+
+.auth-input {
+    width: 100%;
+    padding: 14px 16px 14px 44px; /* Tăng padding trái để chừa chỗ cho Icon */
+    border-radius: 12px !important;
+    border: 1.5px solid #E2E8F0 !important;
+    background-color: var(--white) !important;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    color: var(--dark-text);
+    font-weight: 500;
+}
+
+.auth-input::placeholder {
+    color: #94A3B8;
+    font-weight: 400;
+}
+
+/* Hiệu ứng khi focus vào ô input */
+.auth-input:focus {
+    border-color: var(--primary-yellow) !important;
+    box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.15) !important;
+    outline: none;
+}
+
+.auth-input:focus + .input-icon,
+.auth-form-group:focus-within .input-icon {
+    color: #E6A300; /* Icon đổi màu khi đang nhập liệu */
+}
+
+/* Nút Submit */
+/* Nút Submit (Đã đổi sang dải màu Vàng - Cam thương hiệu) */
+/* Nút Submit (Tone Trắng - Vàng thanh lịch) */
+.auth-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    background: var(--white); /* Nền trắng sạch sẽ */
+    color: #B8860B; /* Chữ màu vàng đồng đậm để đảm bảo độ tương phản, dễ đọc */
+    border: 2px solid var(--primary-yellow); /* Viền màu vàng thương hiệu */
+    font-weight: 700;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 1.8rem;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.1); /* Đổ bóng vàng cực nhẹ */
+}
+
+.auth-btn i {
+    color: #B8860B; /* Icon cùng màu với chữ */
+    transition: transform 0.3s ease;
+}
+
+/* Hiệu ứng khi di chuột vào (Lấp đầy nền vàng) */
+.auth-btn:hover {
+    background: var(--primary-yellow); /* Đổi sang nền vàng */
+    color: var(--dark-text); /* Chữ chuyển về màu đen/xám đậm để nổi bật */
+    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3); /* Bóng tỏa rộng và sáng hơn */
+}
+
+.auth-btn:hover i {
+    color: var(--dark-text);
+    transform: translateX(5px); /* Mũi tên trượt nhẹ sang phải */
+}
+
+/* Hiệu ứng khi bấm xuống */
+.auth-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 4px 10px rgba(255, 215, 0, 0.15);
+}
+
+/* Liên kết chuyển trang */
+.auth-footer {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.95rem;
+    color: #64748B;
+}
+
+.auth-link {
+    color: var(--dark-text);
+    font-weight: 700;
+    text-decoration: none;
+    transition: color 0.2s;
+    margin-left: 5px;
+    position: relative;
+}
+
+.auth-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0; right: 0;
+    height: 2px;
+    background-color: var(--primary-yellow);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.auth-link:hover::after {
+    transform: scaleX(1);
+}
+
+/* Hiệu ứng trượt lên */
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}

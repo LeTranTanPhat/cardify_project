@@ -11,23 +11,34 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/layout.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
 
 <div class="main-wrapper">
-    <!-- SIDEBAR -->
     <aside class="sidebar">
         <a href="{% url 'dashboard' %}" class="brand-logo">
             <i class="ph-fill ph-lightning brand-icon"></i> CARDIFY.AI
         </a>
         
+        {% if user.is_authenticated %}
         <ul class="nav-menu">
             <li class="nav-item">
                 <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <i class="ph ph-house fs-5 me-2"></i> Dashboard
                 </a>
             </li>
+            
+            <li class="nav-item">
+                <a href="{% url 'community_decks' %}" class="nav-link {% if request.resolver_match.url_name == 'community_decks' %}active{% endif %}">
+                    <i class="ph ph-users-three fs-5 me-2"></i> Kho thẻ chung
+                </a>
+            </li>
+
             <li class="nav-item">
                 <a href="{% url 'create_deck' %}" class="nav-link {% if request.resolver_match.url_name == 'create_deck' %}active{% endif %}">
                     <i class="ph ph-plus-circle fs-5 me-2"></i> Tạo bộ thẻ
@@ -40,12 +51,21 @@
             </li>
             <li class="nav-item">
                 <a href="{% url 'pomodoro' %}" class="nav-link {% if request.resolver_match.url_name == 'pomodoro' %}active{% endif %}">
-                    <i class="ph ph-hourglass-high fs-5 me-2"></i> Trạm hồi máu
+                    <i class="ph ph-hourglass-high fs-5 me-2"></i> Trạm hồi năng lượng
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'study_history' %}" class="nav-link {% if request.resolver_match.url_name == 'study_history' %}active{% endif %}">
+                    <i class="ph ph-clock-counter-clockwise fs-5 me-2"></i> Lịch sử học tập
                 </a>
             </li>
         </ul>
 
         <div class="mt-auto">
+            <a href="{% url 'profile' %}" class="nav-link {% if 'profile' in request.path %}active{% endif %}" style="margin-bottom: 5px;">
+                <i class="ph ph-user-gear fs-5 me-2"></i> Tài khoản
+            </a>
+        
             <form action="{% url 'logout' %}" method="post" id="logout-form" class="d-none">
                 {% csrf_token %}
             </form>
@@ -53,12 +73,19 @@
                 <i class="ph ph-sign-out fs-5 me-2"></i> Đăng xuất
             </a>
         </div>
+        {% else %}
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="{% url 'login' %}" class="nav-link">
+                    <i class="ph ph-sign-in fs-5 me-2"></i> Đăng nhập
+                </a>
+            </li>
+        </ul>
+        {% endif %}
     </aside>
 
-    <!-- OVERLAY -->
     <div class="overlay"></div>
 
-    <!-- CONTENT -->
     <main class="content-area">
         <header class="top-navbar">
             <button class="menu-toggle me-2">
@@ -66,32 +93,44 @@
             </button>
 
             {% if user.is_authenticated %}
-            <div class="user-status-wrapper">
+            <div class="user-status-wrapper d-flex align-items-center">
                 
-                <div class="energy-bar-container">
-                    <i class="ph-fill ph-lightning text-warning"></i>
-                    <div class="progress energy-progress">
+                <div class="energy-bar-container mx-2" style="height: 38px; display: flex; align-items: center; background: #f8f9fa; border-radius: 50px; padding: 6px 14px; border: 1px solid #e9ecef;">
+                    <i class="ph-fill ph-lightning text-warning fs-5"></i>
+                    <div class="progress energy-progress mx-2" style="width: 60px; height: 8px; margin: 0;">
                         <div class="energy-fill" style="width: {{ user.profile.energy }}%"></div>
                     </div>
-                    <span class="energy-text">{{ user.profile.energy|default:0 }}/100</span>
+                    <span class="energy-text fw-bold text-muted" style="font-size: 0.75rem; margin: 0;">{{ user.profile.energy|default:0 }}/100</span>
                 </div>
 
                 {% if 'arena' in request.path %}
-                <div class="stat-badge heart-badge" id="nav-hearts">
-                    <i class="ph-fill ph-heart"></i>
-                    <span id="nav-hearts-count">{{ user.profile.hearts|default:0 }}/5</span>
+                <div class="stat-badge heart-badge mx-2 d-flex align-items-center" id="nav-hearts" style="height: 38px; background: #fff0f0; border-radius: 50px; padding: 6px 14px; border: 1px solid #ffe3e3;">
+                    <i class="ph-fill ph-heart text-danger fs-5 me-1"></i>
+                    <span id="nav-hearts-count" class="fw-bold text-danger" style="font-size: 0.85rem;">{{ user.profile.hearts|default:0 }}/5</span>
                 </div>
                 {% endif %}
 
-                <div class="stat-badge level-badge">
-                    <i class="ph-fill ph-star"></i>
-                    <span>LVL. {{ user.profile.level|default:1 }}</span>
+                <div class="level-xp-container mx-2 d-flex align-items-center" style="background: #f8f9fa; border-radius: 50px; padding: 6px 14px; border: 1px solid #e9ecef; height: 38px;">
+                    <div class="level-badge d-flex align-items-center">
+                        <i class="ph-fill ph-star text-warning me-1 fs-5"></i>
+                        <span class="fw-bold" style="font-size: 0.85rem; color: #495057;">LVL. {{ user.profile.level|default:1 }}</span>
+                    </div>
+                    
+                    <div class="progress mx-2" style="height: 8px; width: 60px; border-radius: 10px; background-color: #e2e8f0; margin: 0;">
+                        <div class="progress-bar bg-info" 
+                             id="xp-bar-fill" 
+                             role="progressbar" 
+                             style="width: 0%; transition: width 0.5s ease-in-out;">
+                        </div>
+                    </div>
+                    
+                    <span class="fw-bold text-muted" style="font-size: 0.75rem; margin: 0;" id="xp-text">0/100</span>
                 </div>
                 
-                <div class="user-profile-info">
-                    <i class="ph ph-user-circle fs-4 text-muted"></i>
-                    <span class="username-text ms-1">{{ user.username }}</span>
-                </div>
+                <a href="{% url 'profile' %}" class="user-profile-info text-decoration-none text-dark ms-3" style="display: flex; align-items: center; height: 38px;">
+                    <i class="ph ph-user-circle fs-3 text-muted"></i>
+                    <span class="username-text ms-2 fw-bold" style="font-size: 0.9rem;">{{ user.username }}</span>
+                </a>
             </div>
             {% endif %}
         </header>
@@ -112,57 +151,147 @@
     </main>
 </div>
 
-<!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
 <script>
-AOS.init({ duration: 600, once: true });
-</script>
+    AOS.init({ duration: 600, once: true });
 
-<script>
-function confirmDelete(deckId) {
-    Swal.fire({
-        title: 'Bạn có chắc chắn?',
-        text: "Bộ thẻ này sẽ bị xóa vĩnh viễn!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Xóa',
-        cancelButtonText: 'Hủy'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('delete-form-' + deckId).submit();
-        }
-    });
-}
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.overlay');
-    const toggleBtn = document.querySelector('.menu-toggle');
-    const navLinks = document.querySelectorAll('.nav-link');
-
-    function toggleSidebar() {
-        sidebar.classList.toggle('active');
-        overlay.classList.toggle('active');
+    function confirmDelete(deckId) {
+        Swal.fire({
+            title: 'Bạn có chắc chắn?',
+            text: "Bộ thẻ này sẽ bị xóa vĩnh viễn!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-form-' + deckId).submit();
+            }
+        });
     }
 
-    toggleBtn.addEventListener('click', toggleSidebar);
-    overlay.addEventListener('click', toggleSidebar);
+    document.addEventListener("DOMContentLoaded", function () {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.overlay');
+        const toggleBtn = document.querySelector('.menu-toggle');
 
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            sidebar.classList.remove('active');
-            overlay.classList.remove('active');
-        });
+        if(toggleBtn && sidebar && overlay) {
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            });
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+        }
     });
-});
+
+    function updateNavbarStats(data) {
+        // Cập nhật Level
+        const levelBadge = document.querySelector('.level-badge span');
+        if (levelBadge) levelBadge.innerText = `LVL. ${data.current_level}`;
+
+        // Cập nhật Năng lượng
+        const energyFill = document.querySelector('.energy-fill');
+        const energyText = document.querySelector('.energy-text');
+        if (energyFill) energyFill.style.width = `${data.energy}%`;
+        if (energyText) energyText.innerText = `${data.energy}/100`;
+
+        // Cập nhật Tim
+        const heartsCount = document.getElementById('nav-hearts-count');
+        if (heartsCount) heartsCount.innerText = `${data.hearts}/5`;
+
+        // Cập nhật Thanh XP
+        const xpBar = document.getElementById('xp-bar-fill');
+        const xpText = document.getElementById('xp-text');
+        if (xpBar && data.current_xp !== undefined && data.xp_needed !== undefined) {
+            let percent = (data.current_xp / data.xp_needed) * 100;
+            if (percent > 100) percent = 100; 
+            xpBar.style.width = `${percent}%`;
+            if (xpText) xpText.innerText = `${data.current_xp}/${data.xp_needed}`;
+        }
+    }
+
+    // Hàm lấy CSRF Token từ Cookie (Best Practice Django)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    async function gainXP(amount) {
+        try {
+            const response = await fetch('/api/add-xp/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken') // Sử dụng token an toàn từ Cookie
+                },
+                body: JSON.stringify({ xp: amount })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                if (data.level_up) {
+                    Swal.fire({
+                        title: 'THĂNG CẤP!',
+                        text: `Chúc mừng bạn đã đạt Cấp ${data.current_level}! Năng lượng và Sinh lực đã được hồi đầy.`,
+                        icon: 'success',
+                        confirmButtonColor: '#FFD700',
+                        confirmButtonText: 'Tuyệt vời!'
+                    });
+                } else {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: `+${amount} XP`,
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                }
+                updateNavbarStats(data);
+            } else {
+                console.error("Lỗi API:", data.error);
+            }
+        } catch (error) {
+            console.error("Lỗi kết nối:", error);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        {% if user.is_authenticated %}
+        let currentXp = {{ user.profile.xp|default:0 }};
+        let currentLevel = {{ user.profile.level|default:1 }};
+        let xpNeeded = currentLevel * 100; 
+        let xpPercent = (currentXp / xpNeeded) * 100;
+        
+        const xpBar = document.getElementById('xp-bar-fill');
+        const xpText = document.getElementById('xp-text');
+        
+        if (xpBar) xpBar.style.width = `${xpPercent}%`;
+        if (xpText) xpText.innerText = `${currentXp}/${xpNeeded}`;
+        {% endif %}
+    });
 </script>
+
+{% block extra_js %}{% endblock %}
 
 </body>
 </html>

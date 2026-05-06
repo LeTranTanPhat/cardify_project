@@ -1,4 +1,5 @@
 {% extends 'flashcards/base.html' %}
+{% load static %}
 
 {% block content %}
 <style>
@@ -9,6 +10,8 @@
         }
     }
 </style>
+
+<link rel="stylesheet" href="{% static 'css/ai_feedback.css' %}">
 
 <div class="row justify-content-center mt-4">
     <div class="col-lg-9">
@@ -25,9 +28,43 @@
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm rounded-4 p-4 mb-5" style="background-color: var(--white);" data-aos="fade-up">
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background-color: var(--white);" data-aos="fade-up">
             <h5 class="fw-bold text-muted mb-4">
-                <i class="ph-fill ph-plus-circle text-warning fs-4 me-1" style="vertical-align: middle;"></i> Thêm Flashcard mới
+                <i class="ph-fill ph-magic-wand text-warning fs-4 me-1" style="vertical-align: middle;"></i> Tự động tạo thẻ bằng AI
+            </h5>
+            
+            <div class="ai-dropzone" id="drop-zone">
+                <i class="ph ph-cloud-arrow-up"></i>
+                <h5 class="fw-bold text-dark mb-2">Kéo và thả tài liệu vào đây</h5>
+                <p class="text-muted mb-4">hoặc click để chọn tệp từ máy (Hỗ trợ: PDF, JPG, PNG)</p>
+                <button type="button" class="btn btn-yellow px-4 py-2 rounded-pill fw-bold shadow-sm" onclick="document.getElementById('file-input').click()">
+                    Chọn tệp ngay
+                </button>
+                <input type="file" id="file-input" class="ai-file-input" accept=".pdf, image/png, image/jpeg">
+            </div>
+
+            <div class="skeleton-wrapper" id="skeleton-loading">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="fw-bold m-0 text-warning">
+                        <i class="ph ph-spinner-gap fa-spin me-2"></i> AI đang phân tích dữ liệu và tạo thẻ...
+                    </h6>
+                </div>
+                <div class="skeleton-header">
+                    <div class="skeleton-circle overflow-hidden position-relative"></div>
+                    <div class="flex-grow-1">
+                        <div class="skeleton-line medium"></div>
+                        <div class="skeleton-line short"></div>
+                    </div>
+                </div>
+                <div class="skeleton-line long"></div>
+                <div class="skeleton-line long"></div>
+                <div class="skeleton-line medium"></div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-5" style="background-color: var(--white);" data-aos="fade-up" data-aos-delay="100">
+            <h5 class="fw-bold text-muted mb-4">
+                <i class="ph-fill ph-plus-circle text-primary fs-4 me-1" style="vertical-align: middle;"></i> Thêm Flashcard thủ công
             </h5>
             
             <form method="POST">
@@ -35,31 +72,37 @@
                 <div class="row g-4">
                     <div class="col-md-6">
                         <label class="form-label fw-bold text-muted small">MẶT TRƯỚC (Câu hỏi / Từ vựng)</label>
-                        <textarea name="front_side" class="form-control bg-light border-0 shadow-none rounded-3 p-3" rows="3" placeholder="VD: Hello..." required></textarea>
+                        <textarea name="front_side" id="id_front_side" class="form-control bg-light border-0 shadow-none rounded-3 p-3" rows="3" placeholder="VD: Hello..." required></textarea>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold text-muted small">MẶT SAU (Đáp án / Giải nghĩa)</label>
-                        <textarea name="back_side" class="form-control bg-light border-0 shadow-none rounded-3 p-3" rows="3" placeholder="VD: Xin chào..." required></textarea>
+                        <textarea name="back_side" id="id_back_side" class="form-control bg-light border-0 shadow-none rounded-3 p-3" rows="3" placeholder="VD: Xin chào..." required></textarea>
                     </div>
                 </div>
                 
                 <div class="text-end mt-4">
-                    <button type="submit" class="btn btn-yellow px-4 py-2 rounded-pill fw-bold shadow-sm">
+                    <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill fw-bold shadow-sm">
                         LƯU THẺ NÀY <i class="ph-bold ph-check ms-1"></i>
                     </button>
                 </div>
             </form>
         </div>
 
-        <div data-aos="fade-up" data-aos-delay="100">
+        <div data-aos="fade-up" data-aos-delay="200">
             <div class="d-flex justify-content-between align-items-center mb-3 px-2">
                 <h5 class="fw-bold text-muted mb-0">Các thẻ đã tạo ({{ cards.count }})</h5>
                 
-                {% if cards.count > 0 %}
-                    <a href="{% url 'arena' deck.id %}" class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 py-2 shadow-sm">
-                        <i class="ph-bold ph-play"></i> Vào học ngay
-                    </a>
-                {% endif %}
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <i class="ph-bold ph-upload-simple"></i> Nhập file CSV
+                    </button>
+
+                    {% if cards.count > 0 %}
+                        <a href="{% url 'arena' deck.id %}" class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 py-2 shadow-sm">
+                            <i class="ph-bold ph-play"></i> Vào học ngay
+                        </a>
+                    {% endif %}
+                </div>
             </div>
 
             <div class="row g-4 mt-3">
@@ -102,7 +145,7 @@
                 <div class="col-12 text-center py-5 text-muted" data-aos="zoom-in">
                     <i class="ph-duotone ph-cards fs-1 mb-3 text-warning"></i>
                     <h5 class="fw-bold">Chưa có từ vựng nào!</h5>
-                    <p>Hãy dùng form bên trên để thêm mặt trước và mặt sau cho thẻ nhé.</p>
+                    <p>Hãy tải lên tài liệu cho AI hoặc dùng form bên trên để thêm thẻ nhé.</p>
                 </div>
                 {% endfor %}
             </div>
@@ -110,6 +153,8 @@
 
     </div>
 </div>
+
+<div class="custom-toast-container" id="toast-container"></div>
 
 {% for card in cards %}
 <div class="modal fade" id="editCardModal-{{ card.id }}" tabindex="-1" aria-hidden="true">
@@ -141,8 +186,46 @@
 </div>
 {% endfor %}
 
+<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <form action="{% url 'import_cards' deck.id %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header bg-light border-bottom-0" style="border-radius: 15px 15px 0 0;">
+                    <h5 class="modal-title fw-bold">
+                        <i class="ph-duotone ph-file-csv text-primary fs-4 align-middle me-1"></i> Nhập thẻ từ file CSV
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-0 rounded-3 small">
+                        <i class="ph-fill ph-info"></i> <b>Cấu trúc file chuẩn (.csv):</b><br>
+                        - Cột 1 (Cột A): Mặt trước (Từ vựng)<br>
+                        - Cột 2 (Cột B): Mặt sau (Ý nghĩa)<br>
+                        <span class="text-danger">* Không cần viết dòng tiêu đề.</span>
+                    </div>
+                    
+                    <div class="mb-3 mt-4">
+                        <label for="csvFile" class="form-label fw-bold text-dark">Chọn file CSV từ máy của bạn</label>
+                        <input class="form-control form-control-lg" type="file" id="csvFile" name="file" accept=".csv" required style="border-radius: 10px;">
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-top-0 bg-light" style="border-radius: 0 0 15px 15px;">
+                    <button type="button" class="btn btn-secondary border-0" data-bs-dismiss="modal" style="border-radius: 8px;">Hủy</button>
+                    <button type="submit" class="btn btn-yellow px-4 fw-bold shadow-sm" style="border-radius: 8px;">
+                        <i class="ph-bold ph-upload-simple"></i> Tải lên ngay
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
     function confirmDeleteCard(cardId) {
         Swal.fire({
@@ -156,17 +239,138 @@
             cancelButtonText: 'Hủy',
             background: '#ffffff',
             borderRadius: '15px',
-            showClass: {
-                popup: 'animate__animated animate__zoomIn animate__faster'
-            },
-            hideClass: {
-                popup: 'animate__animated animate__zoomOut animate__faster'
-            }
+            showClass: { popup: 'animate__animated animate__zoomIn animate__faster' },
+            hideClass: { popup: 'animate__animated animate__zoomOut animate__faster' }
         }).then((result) => {
             if (result.isConfirmed) {
                 document.getElementById('delete-card-form-' + cardId).submit();
             }
         });
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const word = urlParams.get('word');
+        const meaning = urlParams.get('meaning');
+
+        if (word && meaning) {
+            const frontInput = document.getElementById('id_front_side');
+            const backInput = document.getElementById('id_back_side');
+
+            if (frontInput) frontInput.value = word;
+            if (backInput) backInput.value = meaning;
+
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Đã tự động điền từ vựng!',
+                showConfirmButton: false,
+                timer: 2500
+            });
+            
+            // Xóa tham số trên thanh địa chỉ sau khi điền
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const skeletonLoading = document.getElementById('skeleton-loading');
+        const toastContainer = document.getElementById('toast-container');
+        
+        // Lấy deck_id từ URL hoặc template (Django đã render URL hiện tại)
+        const deckId = "{{ deck.id }}"; 
+
+        if(dropZone && fileInput && skeletonLoading) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                handleFiles(e.dataTransfer.files);
+            });
+
+            fileInput.addEventListener('change', function() {
+                handleFiles(this.files);
+            });
+
+            function handleFiles(files) {
+                if (files.length === 0) return;
+                
+                let file = files[0];
+                showToast('Đang gửi tệp lên AI: ' + file.name, 'success', 'ph-cloud-arrow-up');
+
+                // Đổi giao diện sang trạng thái loading
+                dropZone.style.display = 'none';
+                skeletonLoading.style.display = 'block';
+
+                // Chuẩn bị form data để gửi file
+                let formData = new FormData();
+                formData.append('file', file);
+
+                // Bắn API tới hàm ai_generate_cards trong views.py
+                fetch(`/deck/${deckId}/ai-generate/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    skeletonLoading.style.display = 'none';
+                    if(data.status === 'success') {
+                        showToast(data.message, 'success', 'ph-magic-wand');
+                        // Load lại trang sau 1.5s để hiển thị thẻ mới
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        showToast(data.message, 'error', 'ph-warning-circle');
+                        dropZone.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    skeletonLoading.style.display = 'none';
+                    showToast('Có lỗi hệ thống khi kết nối tới AI.', 'error', 'ph-warning-circle');
+                    dropZone.style.display = 'block';
+                });
+                
+                fileInput.value = ''; // Reset input
+            }
+        }
+
+        window.showToast = function(message, type = 'success', iconClass = 'ph-info') {
+            const toast = document.createElement('div');
+            toast.className = `custom-toast ${type}`;
+            toast.innerHTML = `
+                <i class="ph ${iconClass} fs-3"></i>
+                <div>
+                    <h6 class="fw-bold mb-1 m-0">${type === 'success' ? 'Thành công' : 'Lỗi'}</h6>
+                    <p class="text-muted m-0" style="font-size: 0.9rem;">${message}</p>
+                </div>
+            `;
+            if(toastContainer) {
+                toastContainer.appendChild(toast);
+                setTimeout(() => toast.classList.add('show'), 10);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 400);
+                }, 4000);
+            }
+        }
+    });
 </script>
 {% endblock %}
