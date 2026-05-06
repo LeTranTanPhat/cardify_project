@@ -1,0 +1,32 @@
+# Python cache files (Các file hệ thống tự sinh)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Môi trường ảo (Virtual environments)
+venv/
+env/
+.env
+
+# IDE / Trình soạn thảo code (Tránh xung đột cấu hình máy mỗi người)
+.vscode/
+.idea/
+
+# File rác của hệ điều hành
+.DS_Store
+Thumbs.db
+# macOS / Apple OS Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# db.sqlite3
