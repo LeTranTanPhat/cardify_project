@@ -1,133 +1,304 @@
 /* ==========================================================================
-   AI EXPERIENCE & FEEDBACK UI STYLES
+   TẠO THẺ AI & FEEDBACK - ĐỒNG BỘ GIAO DIỆN PREMIUM SAAS (ULTIMATE UPGRADE)
    ========================================================================== */
 
-/* --- 1. VÙNG KÉO THẢ (DRAG & DROP ZONE) --- */
+   :root {
+    /* Brand Colors - Tối ưu độ bão hòa để nhìn sang trọng hơn */
+    --brand-accent: #F59E0B; /* Hổ phách hiện đại */
+    --brand-accent-hover: #D97706;
+    --brand-accent-soft: #FEF3C7;
+    --brand-accent-glow: rgba(245, 158, 11, 0.2);
+    
+    /* Surface & Text - Tương phản cao, dễ đọc */
+    --surface-white: #FFFFFF;
+    --surface-glass: rgba(255, 255, 255, 0.85); /* Kính mờ */
+    --surface-hover: #F8FAFC;
+    --text-main: #0F172A; 
+    --text-muted: #64748B;
+    --border-light: #E2E8F0;
+    --border-focus: #94A3B8;
+    
+    /* Shadows & Transitions - Siêu mượt (Spring Physics) */
+    --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+    --shadow-float: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+    --shadow-glow: 0 0 20px var(--brand-accent-glow);
+    
+    /* Bezier cong chuẩn Apple/Modern UI */
+    --transition-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- 1. VÙNG KÉO THẢ (Tương tác nổi 3D mượt mà) --- */
 .ai-dropzone {
+    /* Thay vì viền cứng, dùng repeating-linear-gradient để tạo viền đứt đoạn sắc nét hơn */
+    background-image: dashed;
     border: 2px dashed #CBD5E1;
-    border-radius: 20px;
-    padding: 60px 20px;
+    border-radius: clamp(16px, 2vw, 24px); /* Tự co giãn theo màn hình */
+    padding: clamp(32px, 5vw, 56px) 24px;
+    background: var(--surface-white);
     text-align: center;
-    background-color: #F8FAFC;
-    transition: all 0.3s ease;
-    cursor: pointer;
+    transition: var(--transition-smooth);
     position: relative;
+    cursor: pointer;
     margin-bottom: 24px;
+    outline: none;
+    overflow: hidden;
 }
 
-.ai-dropzone:hover {
-    border-color: #FFD700;
-    background-color: #FFFDF0;
-}
-
-/* Class được add bằng JS khi đang kéo file qua */
-.ai-dropzone.dragover {
-    border-color: #FF9800;
-    background-color: #FFFDF0;
-    transform: scale(1.02);
-    box-shadow: 0 10px 25px rgba(255, 152, 0, 0.1);
+.ai-dropzone::before {
+    /* Hiệu ứng nền lan tỏa nhẹ khi hover */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, var(--brand-accent-soft) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 0;
 }
 
 .ai-dropzone i {
-    font-size: 3.5rem;
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
     color: #94A3B8;
-    margin-bottom: 15px;
-    transition: color 0.3s ease;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.4s var(--transition-spring), color 0.3s ease;
 }
 
-.ai-dropzone.dragover i {
-    color: #FFD700;
+.ai-dropzone:hover, .ai-dropzone.dragover {
+    border-color: var(--brand-accent);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-2px);
 }
 
-/* Ẩn input file mặc định */
-.ai-file-input {
-    display: none;
+.ai-dropzone:hover::before, .ai-dropzone.dragover::before {
+    opacity: 1;
 }
 
-/* --- 2. HIỆU ỨNG SKELETON LOADING --- */
+.ai-dropzone:hover i, .ai-dropzone.dragover i {
+    color: var(--brand-accent);
+    transform: translateY(-8px) scale(1.1);
+}
+
+.ai-dropzone:focus-visible {
+    border-color: var(--brand-accent);
+    box-shadow: 0 0 0 4px var(--surface-white), 0 0 0 8px var(--brand-accent-glow);
+}
+
+.ai-dropzone > * { pointer-events: none; }
+.ai-dropzone .btn, .ai-dropzone label { pointer-events: auto; position: relative; z-index: 10; }
+.ai-file-input { display: none !important; }
+
+
+/* --- 2. SKELETON LOADING (Shimmer đa tầng - Cao cấp) --- */
 .skeleton-wrapper {
-    display: none; /* Sẽ được bật bằng JS */
-    background: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    display: none; 
+    background: var(--surface-white);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
 }
 
 .skeleton-header {
     display: flex;
     align-items: center;
-    gap: 15px;
-    margin-bottom: 20px;
+    gap: 16px;
+    margin-bottom: 24px;
 }
 
 .skeleton-circle {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: #E2E8F0;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%; /* Tròn hoàn toàn nhìn sẽ organic hơn */
 }
 
 .skeleton-line {
     height: 14px;
-    background: #E2E8F0;
     border-radius: 8px;
-    margin-bottom: 12px;
-    position: relative;
-    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+/* Kỹ thuật Shimmer 2.0: Sáng và mượt hơn */
+.skeleton-circle, .skeleton-line {
+    background: #F1F5F9;
+    background-image: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0,
+        rgba(255, 255, 255, 0.6) 20%,
+        rgba(255, 255, 255, 0) 40%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200px 100%;
+    animation: premium-shimmer 1.8s infinite linear;
 }
 
 .skeleton-line.short { width: 40%; }
 .skeleton-line.medium { width: 70%; }
 .skeleton-line.long { width: 100%; }
 
-/* Animation vệt sáng chạy qua */
-.skeleton-circle::after,
-.skeleton-line::after {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
-    animation: shimmer 1.5s infinite;
+@keyframes premium-shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: calc(200px + 100%) 0; }
 }
 
-@keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-}
 
-/* --- 3. TOAST NOTIFICATION (THÔNG BÁO) --- */
+/* --- 3. TOAST NOTIFICATION (Glassmorphism + Animated Progress) --- */
 .custom-toast-container {
     position: fixed;
-    bottom: 24px;
-    right: 24px;
+    bottom: clamp(16px, 3vw, 32px);
+    right: clamp(16px, 3vw, 32px);
     z-index: 1050;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    pointer-events: none; 
 }
 
 .custom-toast {
-    background: #FFFFFF;
-    border-left: 4px solid #FFD700;
-    padding: 16px 24px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    pointer-events: auto;
+    /* Hiệu ứng kính mờ (Glassmorphism) */
+    background: var(--surface-glass); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 16px 20px;
+    border-radius: 16px;
+    box-shadow: var(--shadow-float);
     display: flex;
     align-items: center;
-    gap: 15px;
-    transform: translateX(150%);
+    gap: 16px;
+    min-width: 320px;
+    position: relative;
+    overflow: hidden; 
+    
+    /* Hoạt ảnh xuất hiện nảy (Spring) */
+    transform: translateX(120%) scale(0.9);
     opacity: 0;
-    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transition: transform 0.6s var(--transition-spring), opacity 0.4s ease;
 }
 
 .custom-toast.show {
-    transform: translateX(0);
+    transform: translateX(0) scale(1);
     opacity: 1;
 }
 
-.custom-toast.success { border-left-color: #22C55E; }
-.custom-toast.success i { color: #22C55E; }
+/* Đánh dấu màu sắc theo dạng chấm tròn thay vì viền thô */
+.custom-toast::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--brand-accent);
+}
 
-.custom-toast.error { border-left-color: #EF4444; }
+.custom-toast h6 {
+    color: var(--text-main);
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 4px 0 !important;
+}
+
+.custom-toast p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.custom-toast.success::before { background: #10B981; }
+.custom-toast.success i { color: #10B981; }
+.custom-toast.error::before { background: #EF4444; }
 .custom-toast.error i { color: #EF4444; }
+
+/* Thanh chạy thời gian siêu mượt */
+.custom-toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: currentColor;
+    opacity: 0.2;
+    width: 100%;
+    transform-origin: left;
+    /* Áp dụng class .run-progress qua JS để kích hoạt */
+}
+.run-progress {
+    animation: toast-timer linear forwards;
+}
+
+@keyframes toast-timer {
+    100% { transform: scaleX(0); }
+}
+
+
+/* --- 4. FLASHCARD ITEM (Tương tác Micro-interactions) --- */
+.flashcard-item {
+    background: var(--surface-white);
+    border: 1px solid var(--border-light) !important;
+    border-radius: 16px !important;
+    transition: var(--transition-smooth);
+    position: relative;
+    isolation: isolate; /* Ngăn chặn overflow ảnh hưởng ra ngoài */
+}
+
+/* Hiệu ứng nổi bật cao cấp khi tương tác */
+.flashcard-item:hover,
+.flashcard-item:focus-within { 
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: var(--shadow-float) !important;
+    border-color: transparent !important;
+}
+
+/* Viền Gradient xuất hiện khi Hover (Premium Feel) */
+.flashcard-item::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 17px; /* Lớn hơn border-radius thật 1px */
+    background: linear-gradient(135deg, var(--brand-accent), #F97316);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.flashcard-item:hover::after,
+.flashcard-item:focus-within::after {
+    opacity: 1;
+}
+
+/* Nút thao tác ẩn hiện mượt mà */
+.card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.card-actions .btn {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+    transition: var(--transition-smooth);
+    background: var(--surface-white);
+    border: 1px solid var(--border-light);
+    color: var(--text-muted);
+    border-radius: 8px;
+}
+
+.flashcard-item:hover .card-actions .btn,
+.flashcard-item:focus-within .card-actions .btn {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+/* Delay cho từng nút tạo cảm giác "thác đổ" (cascade) */
+.flashcard-item:hover .card-actions .btn:nth-child(1) { transition-delay: 0.05s; }
+.flashcard-item:hover .card-actions .btn:nth-child(2) { transition-delay: 0.1s; }
+
+.card-actions .btn:hover {
+    background: var(--surface-hover);
+    color: var(--text-main);
+    border-color: var(--border-focus);
+    transform: translateY(-2px); /* Tương tác nhỏ khi di chuột vào nút */
+}

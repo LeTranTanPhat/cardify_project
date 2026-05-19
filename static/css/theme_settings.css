@@ -1,0 +1,163 @@
+/* ==========================================================================
+   PREMIUM MODAL SETTINGS SYSTEM (GLASSMORPHISM & DASHBOARD INTEGRATION)
+   ========================================================================== */
+
+/* 1. Lớp nền mờ phía sau popup - Tạo chiều sâu bằng hiệu ứng Blur */
+.settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4); /* Nền tối nhẹ kiểu Slate */
+    backdrop-filter: blur(12px);       /* Làm mờ hậu cảnh cực mịn */
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Kích hoạt hiển thị Overlay mượt mà */
+.settings-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 2. Thân của Khung Cài đặt (Modal Box) */
+.settings-modal {
+    background: #FFFFFF;
+    width: 100%;
+    max-width: 520px; /* Độ rộng tiêu chuẩn vàng cho Popup cài đặt */
+    border-radius: 24px; /* Bo góc mềm mại đồng bộ với Deck Card */
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow: 
+        0 25px 50px -12px rgba(15, 23, 42, 0.12),
+        0 0 0 1px rgba(15, 23, 42, 0.02);
+    overflow: hidden;
+    transform: scale(0.92) translateY(15px);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* Hiệu ứng nảy nhẹ khi mở */
+}
+
+.settings-overlay.show .settings-modal {
+    transform: scale(1) translateY(0);
+}
+
+/* 3. Tiêu đề Modal (Header) */
+.settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    border-bottom: 1px solid #F1F5F9;
+    
+    h5 {
+        color: #0F172A;
+        font-size: 1.15rem;
+        letter-spacing: -0.01em;
+        display: flex;
+        align-items: center;
+    }
+}
+
+/* 4. Nội dung bên trong (Body) */
+.settings-body {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px; /* Tạo khoảng cách thở đều giữa các phân khu */
+}
+
+/* Phân khu cài đặt */
+.settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Tựa đề phân khu nhỏ (THÔNG TIN CÁ NHÂN, GIAO DIỆN) */
+.section-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94A3B8; /* Màu xám Slate nhạt tinh tế */
+    margin-bottom: 4px;
+}
+
+/* 5. Thiết kế lại các ô Input (`form-control-cyber`) */
+.form-control-cyber {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #334155;
+    background: #F8FAFC; /* Chuyển từ xanh thô sang xám trắng sang trọng */
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+
+    &:focus {
+        background: #FFFFFF;
+        border-color: var(--primary-yellow, #FFC107);
+        box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.15);
+        outline: none;
+    }
+
+    &[readonly] {
+        background: #F1F5F9;
+        color: #64748B;
+        cursor: not-allowed;
+        border-color: #E2E8F0;
+    }
+}
+
+/* 6. Khu vực bật tắt Giao diện (Theme Toggle Wrapper) */
+.theme-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #F8FAFC;
+    padding: 16px 20px;
+    border-radius: 16px;
+    border: 1px solid #E2E8F0;
+    
+    p { color: #1E293B; }
+    small { color: #64748B; }
+}
+
+/* 7. Đồng bộ Chế độ Cyberpunk (Dark Mode) cho Khung */
+[data-theme="cyberpunk"] {
+    .settings-modal {
+        background: #0A0F1D;
+        border-color: rgba(0, 255, 65, 0.15);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 255, 65, 0.05);
+    }
+
+    .settings-header {
+        border-bottom-color: #1E293B;
+        h5 { color: #00FF41; text-shadow: 0 0 8px rgba(0, 255, 65, 0.3); }
+    }
+
+    .theme-toggle-wrapper {
+        background: #111827;
+        border-color: #1E293B;
+        p { color: #FFFFFF; }
+    }
+
+    .form-control-cyber {
+        background: #111827;
+        border-color: #1E293B;
+        color: #E2E8F0;
+
+        &:focus {
+            border-color: #00FF41;
+            box-shadow: 0 0 0 4px rgba(0, 255, 65, 0.15);
+        }
+
+        &[readonly] {
+            background: #1F2937;
+            color: #9CA3AF;
+        }
+    }
+}

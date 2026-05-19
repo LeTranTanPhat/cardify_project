@@ -1,0 +1,325 @@
+/* ==========================================================================
+   POMODORO RING TIMER - ULTRA-PREMIUM SAAS ENGINE (2026 SPEC)
+   ========================================================================== */
+   .pom-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 2.5rem 1rem;
+    /* Khởi tạo ngữ cảnh hộp chứa độc lập giúp module tự responsive theo khung bao ngoài */
+    container-type: inline-size; 
+}
+
+/* ===== 1. VÒNG RING ÁNH SÁNG (SVG HARDWARE ACCELERATED) ===== */
+.pom-ring-wrap {
+    position: relative;
+    width: clamp(240px, 45vw, 280px); /* Kích thước động mượt mà giữa các cỡ màn hình */
+    aspect-ratio: 1 / 1; /* Khóa cứng tỷ lệ vuông tuyệt đối thay vì set cứng height */
+    filter: drop-shadow(0 16px 32px rgba(15, 23, 42, 0.04));
+    will-change: transform;
+
+    & svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+        /* Kích hoạt cơ chế render vector chất lượng cao, chống gai mờ khi co giãn */
+        shape-rendering: geometricPrecision; 
+    }
+
+    & .pom-ring-bg {
+        fill: none;
+        stroke: var(--border-color, rgba(226, 232, 240, 0.5));
+        stroke-width: 7; /* Chuốt mỏng thanh mảnh siêu sang */
+    }
+
+    & .pom-ring-fg {
+        fill: none;
+        stroke: var(--primary-yellow, #FFC107);
+        stroke-width: 7;
+        stroke-linecap: round;
+        /* Hào quang phát xạ đa tầng quang học (Chroma Layered Glow) */
+        filter: drop-shadow(0 0 8px rgba(255, 193, 7, 0.4)) 
+                drop-shadow(0 0 20px rgba(255, 193, 7, 0.15));
+        /* Ép xung luồng Render chạy mượt 120Hz/144Hz không giật lag */
+        transition: stroke-dashoffset 1s linear, stroke 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: stroke-dashoffset;
+    }
+
+    & .pom-ring-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+}
+
+.pom-time-text {
+    font-size: clamp(3rem, 12cqw, 3.8rem); /* Co giãn font chữ theo độ rộng của khung chứa (Container) */
+    font-weight: 900;
+    letter-spacing: -0.04em; /* Khóa khoảng cách chữ tracking hẹp chuẩn thiết kế Thụy Sĩ */
+    line-height: 1;
+    font-variant-numeric: tabular-nums; /* Giữ cố định chiều ngang con số, triệt tiêu rung lắc khung hình */
+    color: var(--dark-text, #0F172A);
+    text-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+/* ===== 2. MODE BADGE (PILL THỜI THƯỢNG - GRADIENT GLOW) ===== */
+.pom-mode-badge {
+    font-size: 0.72rem;
+    font-weight: 850;
+    padding: 6px 16px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    
+    /* Focus Mode (Mặc định) */
+    background: linear-gradient(135deg, #FFFDF0 0%, #FFF3CD 100%);
+    color: #8A6D00;
+    border: 1px solid rgba(255, 193, 7, 0.35);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.12);
+
+    /* Break Mode (Trạng thái nghỉ ngơi) */
+    &.break-mode {
+        background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+        color: #15803D;
+        border: 1px solid rgba(74, 222, 128, 0.35);
+        box-shadow: 0 4px 12px rgba(74, 222, 128, 0.12);
+    }
+}
+
+/* ===== 3. SESSION DOTS (HIỆU ỨNG POP-UP ĐỘNG LỰC HỌC) ===== */
+.pom-sessions {
+    display: flex;
+    gap: 12px;
+    margin-block-start: 8px; /* Thuộc tính logic thay cho margin-top */
+}
+
+.pom-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--light-gray, #E2E8F0);
+    border: 2px solid transparent;
+    transition: all 0.4s cubic-bezier(0.34, 1.7, 0.64, 1);
+    will-change: transform;
+
+    /* Khi hoàn thành: Chấm nảy lò xo và bừng sáng hiệu ứng hạt */
+    &.done {
+        background: var(--primary-yellow, #FFC107);
+        border-color: rgba(255, 193, 7, 0.3);
+        box-shadow: 0 0 14px var(--primary-yellow, #FFC107);
+        transform: scale(1.25);
+    }
+}
+
+/* ===== 4. SETTINGS MODAL (HIGH-END GLASSMORPHISM & BLUR STACK) ===== */
+.pom-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.35); /* Hạ dải màu Slate giúp lớp phủ tinh tế nhẹ nhàng */
+    backdrop-filter: blur(12px) saturate(140%); /* Tăng cường độ mờ kính viễn thị cao cấp */
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    z-index: 1050;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity;
+
+    &.open {
+        display: flex;
+        opacity: 1;
+    }
+
+    & .pom-modal-box {
+        background: var(--white, #FFFFFF);
+        border-radius: 28px; /* Bo góc lớn chuẩn thiết kế hệ điều hành hiện đại */
+        padding: 2.25rem;
+        width: 380px;
+        max-width: 90vw;
+        /* Đổ bóng chồng lớp quang học hấp thụ ánh sáng môi trường */
+        box-shadow: 
+            0 30px 60px -15px rgba(15, 23, 42, 0.22), 
+            0 0 0 1px rgba(15, 23, 42, 0.04);
+        transform: scale(0.92) translateY(15px);
+        transition: transform 0.5s cubic-bezier(0.34, 1.6, 0.64, 1);
+        will-change: transform;
+    }
+
+    &.open .pom-modal-box {
+        transform: scale(1) translateY(0);
+    }
+
+    & .pom-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-block-end: 1.75rem;
+    }
+
+    & .pom-modal-title {
+        font-size: 1.25rem;
+        font-weight: 850;
+        color: var(--dark-text, #0F172A);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        letter-spacing: -0.01em;
+    }
+
+    & .pom-modal-close {
+        background: var(--light-gray, #F1F5F9);
+        border: none;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        cursor: pointer;
+        color: #64748B;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;
+
+        &:hover {
+            background: #E2E8F0;
+            color: #0F172A;
+            transform: rotate(90deg) scale(1.05);
+        }
+    }
+}
+
+/* ===== 5. SETTING ROWS & PREMIUM INPUTS ===== */
+.setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-block: 16px; /* Thay thế padding top/bottom bằng thuộc tính logic */
+    border-block-end: 1px solid var(--border-color, #F1F5F9);
+
+    &:last-of-type {
+        border-block-end: none;
+        padding-block-end: 0;
+    }
+
+    & .setting-label {
+        font-size: 0.95rem;
+        font-weight: 750;
+        color: var(--dark-text, #1E293B);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-block-end: 3px;
+    }
+
+    & .setting-sub {
+        font-size: 0.78rem;
+        color: #94A3B8;
+        font-weight: 500;
+    }
+
+    & .setting-input {
+        width: 76px;
+        text-align: center;
+        background: var(--light-gray, #F8FAFC);
+        border: 2px solid transparent;
+        border-radius: 12px;
+        padding: 8px;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--dark-text, #0F172A);
+        transition: all 0.25s ease;
+
+        &:hover {
+            background: #E2E8F0;
+        }
+
+        &:focus {
+            outline: none;
+            background: var(--white, #FFFFFF);
+            border-color: var(--primary-yellow, #FFC107);
+            box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.12);
+        }
+    }
+}
+
+/* ===== 6. TOGGLE SWITCH (SMOOTH NESTED iOS ACCELERATED) ===== */
+.toggle-wrap {
+    position: relative;
+    width: 50px;
+    height: 30px;
+    flex-shrink: 0;
+    cursor: pointer;
+
+    & input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+    }
+
+    & .toggle-track {
+        position: absolute;
+        inset: 0;
+        background: #E2E8F0;
+        border-radius: 100px;
+        transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    & input:checked + .toggle-track {
+        background: var(--primary-yellow, #FFC107);
+    }
+
+    & .toggle-thumb {
+        position: absolute;
+        left: 3px;
+        top: 3px;
+        width: 24px;
+        height: 24px;
+        background: #FFFFFF;
+        border-radius: 50%;
+        /* Chuyển động quán tính vật lý chất lỏng (Fluid iOS Transition) */
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.3s ease, left 0.3s ease;
+        pointer-events: none;
+        box-shadow: 0 3px 8px rgba(15, 23, 42, 0.12);
+        will-change: transform, width;
+    }
+
+    & input:checked ~ .toggle-thumb {
+        transform: translateX(20px);
+    }
+
+    /* Tương tác vi mô cao cấp: Co dãn kén chất lỏng khi click giữ chuột chuột */
+    &:active .toggle-thumb {
+        width: 28px;
+    }
+
+    & input:checked:active ~ .toggle-thumb {
+        width: 28px;
+        /* Tính toán lại điểm neo dịch chuyển để kén co dãn không bị lọt thỏm ra ngoài viền */
+        left: -1px; 
+    }
+}
+
+.pomodoro-tips {
+    max-width: 480px;
+}
+
+/* ===== 7. CONTAINER QUERIES (THAY THẾ MEDIA QUERY TRUYỀN THỐNG) ===== */
+/* Module tự động thu nhỏ linh hoạt dựa trên diện tích của vùng chứa nó thay vì toàn màn hình */
+@container (max-width: 400px) {
+    .pom-ring-wrap {
+        width: 220px;
+    }
+    .pom-modal-box {
+        padding: 1.5rem;
+    }
+}

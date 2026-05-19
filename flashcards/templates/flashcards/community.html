@@ -1,28 +1,163 @@
 {% extends 'flashcards/base.html' %}
+{% load static %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'css/public_decks.css' %}?v=3.0">
+
 <div class="container mt-4">
-    <h3 class="fw-bold mb-4"><i class="ph-fill ph-users text-primary"></i> Kho thẻ cộng đồng</h3>
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h3 class="fw-bold m-0" style="color: #1E293B;">
+            <i class="ph-fill ph-users text-warning me-2"></i> Kho thẻ cộng đồng
+        </h3>
+        
+        <select id="filterSelect" class="form-select w-auto shadow-sm border-0" style="background-color: #F8FAFC;">
+            <option value="-created_at">Mới nhất</option>
+            <option value="popular">Phổ biến nhất</option>
+        </select>
+    </div>
     
-    <div class="row g-4">
-        {% for deck in public_decks %}
-        <div class="col-md-4">
-            <div class="card shadow-sm h-100 rounded-4">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold">{{ deck.title }}</h5>
-                    <p class="text-muted small">Tác giả: {{ deck.user.username }}</p>
-                    <p class="card-text">{{ deck.description }}</p>
-                    <a href="{% url 'arena' deck.id %}" class="btn btn-outline-primary btn-sm rounded-pill">
-                        Học bộ thẻ này
+    <div class="search-wrapper mb-4">
+        <i class="ph-bold ph-magnifying-glass"></i>
+        <input type="text" id="searchInput" placeholder="Tìm kiếm bộ thẻ theo tên hoặc chủ đề...">
+    </div>
+
+    <div class="deck-grid" id="deck-container"></div>
+
+    <div id="empty-state" class="col-12 text-center py-5" style="display: none; grid-column: 1 / -1;">
+        <div class="p-5 bg-white rounded-4 border" style="box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+            <div class="deck-icon-box mx-auto mb-3" style="width: 64px; height: 64px; font-size: 2rem; background: #F1F5F9; border-color: #E2E8F0; color: #94A3B8;">
+                <i class="ph-duotone ph-archive-box"></i>
+            </div>
+            <h5 class="fw-bold text-dark">Chưa có dữ liệu</h5>
+            <p class="text-muted mb-0">Không tìm thấy bộ thẻ nào phù hợp.</p>
+        </div>
+    </div>
+
+    <div id="loading-spinner" class="text-center mt-5 mb-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="text-muted mt-2 fw-bold">Đang tải thêm thẻ...</p>
+    </div>
+
+    <div id="scroll-anchor" style="height: 20px;"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('deck-container');
+    const searchInput = document.getElementById('searchInput');
+    const filterSelect = document.getElementById('filterSelect');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const emptyState = document.getElementById('empty-state');
+    const scrollAnchor = document.getElementById('scroll-anchor');
+
+    let currentPage = 1;
+    let hasNextPage = true;
+    let isLoading = false;
+    let searchTimeout = null;
+
+    // 1. Hàm gọi API lấy dữ liệu
+    async function fetchDecks(page = 1, append = false) {
+        if (isLoading) return;
+        isLoading = true;
+        
+        if (page === 1) {
+            loadingSpinner.style.display = 'block';
+            emptyState.style.display = 'none';
+            if (!append) container.innerHTML = ''; 
+        }
+
+        const query = searchInput.value.trim();
+        const sort = filterSelect.value;
+
+        try {
+            const response = await fetch(`/api/community/?q=${encodeURIComponent(query)}&sort=${sort}&page=${page}`);
+            const data = await response.json();
+
+            if (page === 1 && data.results.length === 0) {
+                emptyState.style.display = 'block';
+            } else {
+                renderDecks(data.results);
+            }
+
+            hasNextPage = data.has_next;
+            currentPage = data.current_page;
+
+        } catch (error) {
+            console.error("Lỗi khi tải dữ liệu:", error);
+        } finally {
+            isLoading = false;
+            loadingSpinner.style.display = 'none';
+        }
+    }
+
+    // 2. Hàm in HTML (Giữ nguyên thiết kế cũ của bạn)
+    function renderDecks(decks) {
+        decks.forEach(deck => {
+            // Xử lý mô tả ngắn gọn (giống filter truncatechars của Django)
+            let desc = deck.description || "Bộ thẻ này chưa có mô tả chi tiết từ tác giả.";
+            if (desc.length > 90) desc = desc.substring(0, 90) + "...";
+
+            const deckHtml = `
+            <div class="modern-deck-card">
+                <div class="card-header-flex">
+                    <div class="deck-icon-box">
+                        <i class="ph-duotone ph-cards"></i>
+                    </div>
+                    <div class="deck-meta">
+                        <h5 class="deck-title">${deck.title}</h5>
+                        <div class="deck-author">
+                            <i class="ph-fill ph-user-circle"></i> ${deck.author}
+                        </div>
+                    </div>
+                </div>
+
+                <p class="deck-desc">${desc}</p>
+
+                <div class="card-footer-flex">
+                    <div class="deck-badge">
+                        <i class="ph-bold ph-stack"></i> 
+                        ${deck.card_count} thẻ
+                    </div>
+                    
+                    <a href="/deck/${deck.id}/arena/" class="btn-study-action">
+                        Vào học <i class="ph-bold ph-arrow-right"></i>
                     </a>
                 </div>
             </div>
-        </div>
-        {% empty %}
-        <div class="col-12 text-center text-muted py-5">
-            <p>Hiện chưa có ai chia sẻ bộ thẻ nào lên cộng đồng.</p>
-        </div>
-        {% endfor %}
-    </div>
-</div>
+            `;
+            container.insertAdjacentHTML('beforeend', deckHtml);
+        });
+    }
+
+    // 3. Lắng nghe Gõ Tìm kiếm (Có delay chống spam API)
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentPage = 1;
+            hasNextPage = true;
+            fetchDecks(1, false);
+        }, 500); // Đợi 0.5s sau khi ngừng gõ mới tìm
+    });
+
+    // 4. Lắng nghe thay đổi Bộ lọc
+    filterSelect.addEventListener('change', function() {
+        currentPage = 1;
+        hasNextPage = true;
+        fetchDecks(1, false);
+    });
+
+    // 5. Cảm biến Cuộn chuột (Intersection Observer)
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isLoading) {
+            loadingSpinner.style.display = 'block';
+            fetchDecks(currentPage + 1, true);
+        }
+    }, { rootMargin: '100px' }); // Load trước khi chạm đáy 100px
+
+    observer.observe(scrollAnchor);
+
+    // Tải dữ liệu lần đầu khi vào trang
+    fetchDecks(1, false);
+});
+</script>
 {% endblock %}

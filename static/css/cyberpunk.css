@@ -1,0 +1,264 @@
+/* ==========================================================================
+   TÊN FILE: cyberpunk.css
+   MÔ TẢ: Giao diện Cyberpunk 2.0 (Rounded Neon Style) cho Cardify.ai
+   ========================================================================== */
+
+/* ==========================================================================
+   1. HỆ THỐNG BIẾN SỐ (VARIABLES OVERRIDE)
+   ========================================================================== */
+   [data-theme="cyberpunk"] {
+    /* Cấu hình độ bo góc - Bạn có thể đổi thành 8px, 12px, 16px tùy ý thích */
+    --cyber-radius: 12px; 
+
+    /* Nền không gian số */
+    --bg-body: #05050A;
+    --bg-sidebar: #0A0A10;
+    --bg-card: #0D0E16;
+    --bg-input: #07080D;
+    --input-bg-alt: #121422; 
+    
+    /* Màu sắc Neon */
+    --text-main: #00FF66 !important; /* Xanh Neon Matrix */
+    --text-muted: #008F39 !important; /* Xanh lá thẫm */
+    --border-color: rgba(0, 255, 102, 0.18) !important;
+    --accent-color: #00FF66 !important;
+    --primary-gradient: linear-gradient(135deg, #00FF66 0%, #00A344 100%) !important;
+    
+    /* Hiệu ứng Ánh sáng & Bóng đổ */
+    --focus-ring: rgba(0, 255, 102, 0.25) !important;
+    --shadow-modal: 0 0 35px rgba(0, 255, 102, 0.15) !important;
+    --shadow-lg: 0 0 25px rgba(0, 0, 0, 0.75) !important;
+    --cyber-glow: 0 0 12px rgba(0, 255, 102, 0.3);
+    
+    /* Hiệu ứng sọc nhiễu màn hình CRT (Scanlines) */
+    --cyber-scanlines: linear-gradient(rgba(0, 255, 102, 0.01) 50%, rgba(0, 0, 0, 0.1) 50%);
+}
+
+/* ==========================================================================
+   2. KHUNG LAYOUT CƠ BẢN (BODY, WRAPPER)
+   ========================================================================== */
+[data-theme="cyberpunk"] body,
+[data-theme="cyberpunk"] main,
+[data-theme="cyberpunk"] .main-content,
+[data-theme="cyberpunk"] .content-wrapper,
+[data-theme="cyberpunk"] .container-fluid,
+[data-theme="cyberpunk"] .bg-light,
+[data-theme="cyberpunk"] .wrapper,
+[data-theme="cyberpunk"] .page-wrapper,
+[data-theme="cyberpunk"] #main-wrapper,
+[data-theme="cyberpunk"] .col-md-9,
+[data-theme="cyberpunk"] .col-lg-10,
+[data-theme="cyberpunk"] .px-4 {
+    background-color: var(--bg-body) !important;
+    color: var(--text-main) !important;
+    background-image: var(--cyber-scanlines);
+    background-size: 100% 4px;
+}
+
+/* ==========================================================================
+   3. THANH ĐIỀU HƯỚNG (SIDEBAR & NAVBAR)
+   ========================================================================== */
+/* Bọc Sidebar */
+[data-theme="cyberpunk"] .sidebar,
+[data-theme="cyberpunk"] aside,
+[data-theme="cyberpunk"] .navbar-vertical,
+[data-theme="cyberpunk"] .left-sidebar {
+    background-color: var(--bg-sidebar) !important;
+    border-right: 1px solid var(--border-color) !important;
+}
+
+/* Menu Item trong Sidebar */
+[data-theme="cyberpunk"] .sidebar .nav-link,
+[data-theme="cyberpunk"] .sidebar a {
+    color: var(--text-muted) !important;
+    transition: 0.3s ease;
+}
+
+[data-theme="cyberpunk"] .sidebar .nav-link:hover,
+[data-theme="cyberpunk"] .sidebar a:hover {
+    color: var(--text-main) !important;
+    text-shadow: var(--cyber-glow);
+}
+
+[data-theme="cyberpunk"] .sidebar .nav-link.active,
+[data-theme="cyberpunk"] .sidebar .active,
+[data-theme="cyberpunk"] .nav-link.active {
+    background: rgba(0, 255, 102, 0.1) !important;
+    color: var(--text-main) !important;
+    border-left: 4px solid var(--accent-color) !important;
+    /* Bo góc nhẹ bên phải cho item đang active */
+    border-radius: 0 var(--cyber-radius) var(--cyber-radius) 0 !important; 
+}
+
+/* Thanh Navbar ngang trên cùng */
+[data-theme="cyberpunk"] .top-navbar {
+    background-color: rgba(10, 10, 16, 0.8) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* ==========================================================================
+   4. CÁC KHỐI NỘI DUNG (CARDS, MODALS, BẢNG, DANH SÁCH)
+   ========================================================================== */
+[data-theme="cyberpunk"] .card,
+[data-theme="cyberpunk"] .card-body,
+[data-theme="cyberpunk"] .card.shadow-sm,
+[data-theme="cyberpunk"] .deck-card,
+[data-theme="cyberpunk"] .bg-white,
+[data-theme="cyberpunk"] .flashcard-item,
+[data-theme="cyberpunk"] .dashboard-item,
+[data-theme="cyberpunk"] .ai-dropzone,
+[data-theme="cyberpunk"] .modal-content {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-main) !important;
+    box-shadow: var(--shadow-lg) !important;
+    /* Áp dụng bo góc hệ thống */
+    border-radius: var(--cyber-radius) !important; 
+}
+
+[data-theme="cyberpunk"] .table {
+    color: var(--text-main) !important;
+    background-color: transparent !important;
+}
+
+[data-theme="cyberpunk"] .table td, 
+[data-theme="cyberpunk"] .table th {
+    border-color: var(--border-color) !important;
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+}
+
+/* Dropdown Menu & List Group */
+[data-theme="cyberpunk"] .list-group-item,
+[data-theme="cyberpunk"] .dropdown-menu {
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-color) !important;
+    border-radius: var(--cyber-radius) !important;
+}
+
+[data-theme="cyberpunk"] .dropdown-item {
+    color: var(--text-main) !important;
+}
+[data-theme="cyberpunk"] .dropdown-item:hover {
+    background-color: rgba(0, 255, 102, 0.1) !important;
+    border-radius: calc(var(--cyber-radius) - 4px) !important;
+}
+
+/* ==========================================================================
+   5. NÚT BẤM (BUTTONS) & FORMS (INPUTS)
+   ========================================================================== */
+/* Nút bấm (Buttons) */
+[data-theme="cyberpunk"] .btn,
+[data-theme="cyberpunk"] .btn-outline-primary,
+[data-theme="cyberpunk"] .btn-light,
+[data-theme="cyberpunk"] .btn-white,
+[data-theme="cyberpunk"] .auth-btn,
+[data-theme="cyberpunk"] button[type="submit"] {
+    border-radius: var(--cyber-radius) !important; /* Bo góc nút bấm */
+    text-transform: uppercase;
+    transition: all 0.2s ease-in-out;
+}
+
+[data-theme="cyberpunk"] .btn-outline-primary,
+[data-theme="cyberpunk"] .btn-light,
+[data-theme="cyberpunk"] .btn-white {
+    background-color: transparent !important;
+    border: 1px solid var(--accent-color) !important;
+    color: var(--accent-color) !important;
+}
+
+[data-theme="cyberpunk"] .btn-outline-primary:hover,
+[data-theme="cyberpunk"] .btn-light:hover,
+[data-theme="cyberpunk"] .btn-primary:hover {
+    background-color: var(--accent-color) !important;
+    color: #000000 !important;
+    box-shadow: 0 0 15px var(--accent-color) !important;
+}
+
+[data-theme="cyberpunk"] .btn-edit,
+[data-theme="cyberpunk"] .btn-delete {
+    background: transparent !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: calc(var(--cyber-radius) - 4px) !important;
+}
+[data-theme="cyberpunk"] .btn-edit { color: var(--text-main) !important; }
+[data-theme="cyberpunk"] .btn-delete { color: #FF0055 !important; border-color: #FF0055 !important; }
+
+/* Các ô nhập liệu (Inputs, Select) */
+[data-theme="cyberpunk"] .form-control,
+[data-theme="cyberpunk"] .form-select,
+[data-theme="cyberpunk"] input[type="text"],
+[data-theme="cyberpunk"] input[type="password"],
+[data-theme="cyberpunk"] input[type="email"],
+[data-theme="cyberpunk"] input[type="search"],
+[data-theme="cyberpunk"] select,
+[data-theme="cyberpunk"] textarea {
+    background-color: var(--bg-input) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--cyber-radius) !important; /* Bo góc ô nhập liệu */
+}
+
+[data-theme="cyberpunk"] .form-control:focus,
+[data-theme="cyberpunk"] input:focus {
+    box-shadow: 0 0 10px var(--focus-ring) !important;
+    border-color: var(--accent-color) !important;
+}
+
+/* Switch Toggle (Công tắc gạt) */
+[data-theme="cyberpunk"] input:checked + .cyber-slider {
+    box-shadow: 0 0 12px var(--accent-color);
+}
+[data-theme="cyberpunk"] .cyber-slider {
+    background: #1A1A26;
+    border-radius: 34px !important; /* Luôn bo tròn hẳn cho nút công tắc */
+}
+[data-theme="cyberpunk"] .cyber-slider:before {
+    border-radius: 50% !important; /* Nuốm gạt hình tròn mềm mại */
+}
+
+/* ==========================================================================
+   6. MÀU CHỮ (TYPOGRAPHY) & BADGE
+   ========================================================================== */
+[data-theme="cyberpunk"] h1, 
+[data-theme="cyberpunk"] h2, 
+[data-theme="cyberpunk"] h3, 
+[data-theme="cyberpunk"] h4, 
+[data-theme="cyberpunk"] h5, 
+[data-theme="cyberpunk"] .card-title {
+    color: var(--text-main) !important;
+    text-shadow: var(--cyber-glow);
+    letter-spacing: -0.02em;
+}
+
+[data-theme="cyberpunk"] p,
+[data-theme="cyberpunk"] span,
+[data-theme="cyberpunk"] label,
+[data-theme="cyberpunk"] .text-dark,
+[data-theme="cyberpunk"] .text-muted,
+[data-theme="cyberpunk"] .card-text {
+    color: #00BB4A !important;
+}
+
+[data-theme="cyberpunk"] .badge,
+[data-theme="cyberpunk"] .rounded-pill {
+    background-color: rgba(0, 255, 102, 0.05) !important;
+    color: var(--accent-color) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 50px !important; /* Bo tròn dạng viên thuốc cho badge cực đẹp */
+}
+
+/* ==========================================================================
+   7. SCROLLBAR (THANH CUỘN) DÀNH RIÊNG CHO CYBERPUNK
+   ========================================================================== */
+[data-theme="cyberpunk"] ::-webkit-scrollbar-track { 
+    background: var(--bg-body); 
+}
+[data-theme="cyberpunk"] ::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: var(--cyber-radius);
+}
+[data-theme="cyberpunk"] ::-webkit-scrollbar-thumb:hover { 
+    background: var(--accent-color); 
+}

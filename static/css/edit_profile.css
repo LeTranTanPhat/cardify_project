@@ -1,0 +1,265 @@
+/* ==========================================================================
+   TÊN FILE: edit_profile.css
+   MÔ TẢ: Đồng bộ 100% màu sắc Cam Thương Hiệu & Sửa lỗi hiển thị Icon/Nút
+   ========================================================================== */
+
+   :root {
+    --primary-yellow: #FFC107;
+    --primary-orange: #FF8C00;
+    --dark-text: #0F172A;
+    --muted-text: #64748B;
+    --white: #FFFFFF;
+    --bg-light: #F8FAFC;
+    --border-color: #E2E8F0;
+    
+    --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.03);
+    --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.05), 0 10px 10px -5px rgba(15, 23, 42, 0.02);
+    --shadow-glow: 0 0 24px rgba(255, 193, 7, 0.35);
+    
+    --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
+    --ease-smooth: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Hiệu ứng trượt nhẹ khi vào trang */
+.edit-profile-row {
+    animation: editFadeIn 0.5s var(--ease-smooth) forwards;
+}
+@keyframes editFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- MAIN CARD --- */
+.edit-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border-radius: 28px;
+    padding: 40px;
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.4s var(--ease-smooth), box-shadow 0.4s var(--ease-smooth);
+}
+.edit-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(255, 255, 255, 1) inset;
+}
+
+/* --- AVATAR BLOCK --- */
+.edit-avatar-circle {
+    width: 96px;
+    height: 96px;
+    background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-orange) 100%) !important;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--dark-text) !important;
+    font-weight: 900;
+    border: 4px solid var(--white) !important;
+    box-shadow: var(--shadow-glow);
+    position: relative;
+    transition: transform 0.5s var(--ease-spring);
+}
+.edit-avatar-circle:hover {
+    transform: scale(1.08) rotate(-5deg);
+}
+
+/* --- STATS SECTION (Fix triệt để mất màu Icon) --- */
+.edit-stat-box {
+    background: linear-gradient(180deg, var(--white) 0%, rgba(255, 253, 240, 0.5) 100%) !important;
+    padding: 24px 16px;
+    border-radius: 24px;
+    text-align: center;
+    border: 1px solid rgba(255, 215, 0, 0.2) !important;
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 1), 0 4px 12px rgba(15, 23, 42, 0.02) !important;
+    transition: all 0.4s var(--ease-spring);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.edit-stat-box:hover {
+    transform: translateY(-6px);
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 1), 0 15px 30px rgba(255, 193, 7, 0.15) !important;
+    border-color: rgba(255, 193, 7, 0.5) !important;
+}
+
+/* Ép Icon ăn theo màu Cam Vàng Gradient của Profile */
+.edit-stat-box i {
+    font-size: 1.8rem !important;
+    background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-orange) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: var(--primary-orange) !important;
+    margin-bottom: 12px;
+    display: inline-block;
+    filter: drop-shadow(0 4px 6px rgba(255, 140, 0, 0.25)) !important;
+    transition: all 0.3s ease;
+}
+.edit-stat-box:hover i {
+    transform: scale(1.15);
+}
+.edit-stat-box h4 {
+    margin: 0;
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: var(--dark-text);
+}
+.edit-stat-box small {
+    font-size: 0.75rem;
+    color: var(--muted-text);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 700;
+    margin-top: 6px;
+}
+
+/* --- FORM & INPUTS --- */
+.edit-form-label {
+    font-weight: 700;
+    color: var(--dark-text);
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    display: block;
+}
+.edit-input {
+    width: 100%;
+    border: 2px solid transparent !important; 
+    border-radius: 16px !important;
+    padding: 16px 20px !important;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--dark-text) !important;
+    background-color: #F1F5F9 !important; 
+    box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.02) !important;
+    transition: all 0.3s var(--ease-smooth);
+}
+.edit-input:focus {
+    background-color: var(--white) !important;
+    border-color: var(--primary-yellow) !important;
+    box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.15), inset 0 1px 2px rgba(15, 23, 42, 0.01) !important;
+    outline: none;
+}
+.input-disabled-custom {
+    opacity: 0.65;
+    cursor: not-allowed !important;
+    background-color: #E2E8F0 !important;
+    border: 2px dashed var(--border-color) !important;
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(15, 23, 42, 0.02) 10px, rgba(15, 23, 42, 0.02) 20px) !important;
+}
+
+/* --- BUTTONS (Đồng bộ nút màu cam premium) --- */
+.btn-edit-save {
+    background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-orange) 100%) !important;
+    border: none !important;
+    color: #1E293B !important;
+    padding: 16px 24px !important;
+    border-radius: 16px !important;
+    font-weight: 800 !important;
+    font-size: 1.05rem !important;
+    transition: all 0.4s var(--ease-spring) !important;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    box-shadow: 0 4px 12px rgba(255, 140, 0, 0.2) !important;
+}
+.btn-edit-save::before {
+    content: "";
+    position: absolute;
+    top: 0; left: -100%;
+    width: 50%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.6), transparent);
+    transition: all 0.6s ease;
+    z-index: -1;
+}
+.btn-edit-save:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 20px rgba(255, 140, 0, 0.3) !important;
+}
+.btn-edit-save:hover::before {
+    left: 200%;
+    transition: all 0.8s ease-in-out;
+}
+.btn-edit-cancel {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    background: transparent !important;
+    border: 2px solid var(--border-color) !important;
+    color: var(--muted-text) !important;
+    padding: 14px 24px !important;
+    border-radius: 16px !important;
+    text-decoration: none !important;
+    font-weight: 800 !important;
+    font-size: 1.05rem !important;
+    transition: all 0.3s var(--ease-spring) !important;
+}
+.btn-edit-cancel:hover {
+    background: #F1F5F9 !important;
+    color: var(--dark-text) !important;
+    border-color: #CBD5E1 !important;
+    transform: translateY(-2px) !important;
+}
+
+/* ==========================================================================
+   BẢN VÁ CYBERPUNK DÀNH RIÊNG CHO EDIT PROFILE PAGE
+   ========================================================================== */
+[data-theme="cyberpunk"] .edit-card {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+}
+[data-theme="cyberpunk"] .edit-card:hover {
+    box-shadow: 0 10px 30px rgba(0, 255, 65, 0.1) !important;
+}
+[data-theme="cyberpunk"] .edit-avatar-circle {
+    background: var(--bg-body) !important;
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.4) !important;
+    color: var(--accent-color) !important;
+}
+[data-theme="cyberpunk"] .edit-stat-box {
+    background: var(--bg-body) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: none !important;
+}
+[data-theme="cyberpunk"] .edit-stat-box:hover {
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.15) !important;
+}
+[data-theme="cyberpunk"] .edit-stat-box i {
+    background: none !important;
+    -webkit-text-fill-color: var(--accent-color) !important;
+    color: var(--accent-color) !important;
+    filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.4)) !important;
+}
+[data-theme="cyberpunk"] .edit-input {
+    background-color: var(--bg-input) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-color) !important;
+}
+[data-theme="cyberpunk"] .edit-input:focus {
+    background-color: var(--bg-body) !important;
+    border-color: var(--accent-color) !important;
+}
+[data-theme="cyberpunk"] .btn-edit-save {
+    background: transparent !important;
+    color: var(--accent-color) !important;
+    border: 1px solid var(--accent-color) !important;
+}
+[data-theme="cyberpunk"] .btn-edit-save:hover {
+    background: var(--primary-gradient) !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.3) !important;
+}
+[data-theme="cyberpunk"] .edit-form-label,
+[data-theme="cyberpunk"] .edit-stat-box h4 { color: var(--text-main) !important; }
+[data-theme="cyberpunk"] .edit-stat-box small { color: var(--text-muted) !important; }

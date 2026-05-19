@@ -1,4 +1,9 @@
 {% extends 'flashcards/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="dashboard-header mb-5" data-aos="fade-down">
@@ -9,73 +14,76 @@
 <div class="row g-4">
     <div class="col-md-4 col-lg-3" data-aos="zoom-in">
         <a href="{% url 'create_deck' %}" id="create-deck-btn" class="text-decoration-none">
-            <div class="card h-100 border-dashed d-flex align-items-center justify-content-center p-4 text-muted" 
-                 style="border: 2px dashed #ccc; background: transparent;">
+            <div class="card h-100 create-deck-card d-flex align-items-center justify-content-center p-4 text-muted">
                 <div class="text-center">
                     <i class="ph ph-plus-circle display-4"></i>
-                    <p class="fw-bold mt-2">Tạo bộ thẻ mới</p>
+                    <p class="create-deck-text mt-2 mb-0">Tạo bộ thẻ mới</p>
                 </div>
             </div>
         </a>
     </div>
 
     {% for deck in decks %}
-    <div class="col-md-4 col-lg-3" 
-         data-aos="fade-up" 
-         data-aos-delay="{{ forloop.counter }}00"> 
-        
-        <div class="card h-100 deck-card shadow-sm">
-            <div class="card-body p-4">
+    <div class="col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="{{ forloop.counter }}00"> 
+        <div class="card h-100 deck-card">
+            <div class="card-body p-4 d-flex flex-column justify-content-between">
                 
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <i class="ph-duotone ph-cards text-warning fs-1"></i>
-                    
-                    <div class="d-flex align-items-center gap-2">
-                        {% if deck.language == 'en' %}
-                            <span class="badge bg-primary text-white"><i class="ph-fill ph-flag"></i> Tiếng Anh</span>
-                        {% elif deck.language == 'zh' %}
-                            <span class="badge bg-danger text-white"><i class="ph-fill ph-flag"></i> Tiếng Trung</span>
-                        {% elif deck.language == 'ko' %}
-                            <span class="badge bg-info text-dark"><i class="ph-fill ph-flag"></i> Tiếng Hàn</span>
-                        {% else %}
-                            <span class="badge bg-secondary text-white">{{ deck.language|default:"Chung" }}</span>
-                        {% endif %}
-
-                        <span class="badge bg-light text-dark border">{{ deck.cards.count }} thẻ</span>
+                <div>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <i class="ph-duotone ph-cards fs-1"></i>
                         
-                        <div class="dropdown">
-                            <button class="btn btn-dots text-muted p-0 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="ph ph-dots-three-vertical fs-4"></i>
-                            </button>
+                        <div class="d-flex align-items-center gap-2">
+                            {% if deck.language == 'en' %}
+                                <span class="badge bg-primary text-white"><i class="ph-fill ph-flag"></i> Tiếng Anh</span>
+                            {% elif deck.language == 'zh' %}
+                                <span class="badge bg-danger text-white"><i class="ph-fill ph-flag"></i> Tiếng Trung</span>
+                            {% elif deck.language == 'ko' %}
+                                <span class="badge bg-info text-dark"><i class="ph-fill ph-flag"></i> Tiếng Hàn</span>
+                            {% else %}
+                                <span class="badge bg-secondary text-white">{{ deck.language|default:"Chung" }}</span>
+                            {% endif %}
+
+                            <span class="badge bg-light text-dark border">{{ deck.cards.count }} thẻ</span>
                             
-                            <ul class="dropdown-menu dropdown-menu-end custom-dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item custom-dropdown-item text-dark" href="{% url 'edit_deck' deck.id %}">
-                                        <i class="ph-duotone ph-pencil-simple me-2 fs-5 text-primary"></i> Sửa thông tin
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider border-light my-1"></li>
-                                <li>
-                                    <form action="{% url 'delete_deck' deck.id %}" method="POST" id="delete-form-{{ deck.id }}">
-                                        {% csrf_token %}
-                                        <button type="button" class="dropdown-item custom-dropdown-item delete-item w-100 text-start" onclick="confirmDelete('{{ deck.id }}')">
-                                            <i class="ph-duotone ph-trash me-2 fs-5"></i> Xóa bộ thẻ
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
+                            <div class="dropdown">
+                                <button class="btn btn-dots text-muted p-0 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="ph ph-dots-three-vertical fs-4"></i>
+                                </button>
+                                
+                                <ul class="dropdown-menu dropdown-menu-end custom-dropdown-menu border-0 shadow">
+                                    <li>
+                                        <a class="dropdown-item custom-dropdown-item text-dark" href="{% url 'edit_deck' deck.id %}">
+                                            <i class="ph-duotone ph-pencil-simple me-2 fs-5 text-primary"></i> Sửa thông tin
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item custom-dropdown-item text-dark" href="{% url 'import_cards' deck.id %}">
+                                            <i class="ph-duotone ph-file-csv me-2 fs-5 text-success"></i> Nhập thẻ từ CSV
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider border-light my-1"></li>
+                                    <li>
+                                        <form action="{% url 'delete_deck' deck.id %}" method="POST" id="delete-form-{{ deck.id }}">
+                                            {% csrf_token %}
+                                            <button type="button" class="dropdown-item custom-dropdown-item text-danger" onclick="confirmDelete('{{ deck.id }}')">
+                                                <i class="ph-duotone ph-trash me-2 fs-5"></i> Xóa bộ thẻ
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
+                    
+                    <h5 class="card-title fw-bold mb-2">{{ deck.title }}</h5>
+                    <p class="card-text text-muted small mb-4">{{ deck.description|truncatechars:60 }}</p>
                 </div>
                 
-                <h5 class="card-title fw-bold">{{ deck.title }}</h5>
-                <p class="card-text text-muted small">{{ deck.description|truncatechars:60 }}</p>
-                
-                <div class="mt-4 d-flex gap-2">
-                    <a href="{% url 'arena' deck.id %}" class="btn btn-yellow btn-glow flex-grow-1 fw-bold">
+                <div class="d-flex gap-2 mt-auto">
+                    <a href="{% url 'arena' deck.id %}" class="btn btn-deck-learn flex-grow-1">
                         <i class="ph-fill ph-play me-1"></i> Học ngay
                     </a>
-                    <a href="{% url 'add_card' deck.id %}" class="btn btn-light border add-card-btn" title="Quản lý từ vựng">
+                    <a href="{% url 'add_card' deck.id %}" class="btn btn-deck-manage add-card-btn" title="Quản lý từ vựng">
                         <i class="ph ph-list-plus fs-5"></i>
                     </a>
                 </div>
@@ -84,14 +92,48 @@
         </div>
     </div>
     {% empty %}
-    <div class="col-12 text-center py-5 text-muted" data-aos="fade-up">
-        <i class="ph-duotone ph-empty fs-1 mb-3"></i>
-        <p>Bạn chưa có bộ thẻ nào. Hãy tạo bộ thẻ đầu tiên nhé!</p>
+    <div class="col-12 text-center mt-4" data-aos="fade-up">
+        <div class="p-5 empty-state-box mx-auto" style="max-width: 600px;">
+            <div class="empty-state-icon mx-auto mb-4" style="width: 100px; height: 100px; background: rgba(148, 163, 184, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: #94a3b8;">
+                <i class="ph-duotone ph-folder-dashed"></i>
+            </div>
+            
+            <h4 class="fw-bold text-dark mb-2">Thêm dữ liệu để bắt đầu!</h4>
+            <p class="text-muted mb-4 px-md-4">Bạn có thể tạo bộ thẻ mới bằng nút dấu <strong>(+)</strong> ở trên, hoặc khám phá thư viện khổng lồ từ cộng đồng.</p>
+            
+            <div class="d-flex justify-content-center">
+                <a href="{% url 'community_decks' %}" class="btn btn-deck-learn px-4 py-2">
+                    <i class="ph-bold ph-users me-2"></i> Khám phá cộng đồng
+                </a>
+            </div>
+        </div>
     </div>
     {% endfor %}
 </div>
 
 <script>
+    // 1. HÀM XÁC NHẬN XÓA (Nằm ngoài cùng để nút HTML onclick tìm thấy)
+    function confirmDelete(deckId) {
+        Swal.fire({
+            title: 'Xóa bộ thẻ này?',
+            text: "Toàn bộ từ vựng bên trong sẽ bị mất vĩnh viễn và không thể khôi phục!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#EF4444', // Màu đỏ nút xóa
+            cancelButtonColor: '#64748B',  // Màu xám nút hủy
+            confirmButtonText: 'Vẫn xóa, tôi chắc chắn!',
+            cancelButtonText: 'Để sau',
+            background: document.documentElement.getAttribute('data-theme') === 'cyberpunk' ? '#1E293B' : '#FFFFFF',
+            color: document.documentElement.getAttribute('data-theme') === 'cyberpunk' ? '#F8FAFC' : '#0F172A'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Kích hoạt gửi dữ liệu form POST tương ứng lên Django để xử lý xóa
+                document.getElementById(`delete-form-${deckId}`).submit();
+            }
+        });
+    }
+
+    // 2. LOGIC TỰ ĐỘNG BẮT TỪ VỰNG TỪ ĐƯỜNG DẪN URL
     document.addEventListener("DOMContentLoaded", function() {
         const urlParams = new URLSearchParams(window.location.search);
         const word = urlParams.get('word');
@@ -99,49 +141,44 @@
         const lang = urlParams.get('lang');
 
         if (word && meaning) {
-            
-            // 1. Lấy danh sách các bộ thẻ hiện có của bạn (Từ Django truyền vào JS)
             const deckOptions = {
                 {% for deck in decks %}
                 '{{ deck.id }}': '{{ deck.title|escapejs }} ({{ deck.cards.count }} thẻ)',
                 {% endfor %}
             };
 
-            // Lấy sẵn các đường link tạo thẻ tương ứng
             const deckUrls = {
                 {% for deck in decks %}
                 '{{ deck.id }}': '{% url "add_card" deck.id %}',
                 {% endfor %}
             };
 
-            // Kịch bản A: Nếu bạn CHƯA CÓ bộ thẻ nào cả
             if (Object.keys(deckOptions).length === 0) {
                 Swal.fire({
                     title: 'Chưa có bộ thẻ nào!',
                     html: `Bạn cần tạo một bộ thẻ trước khi lưu từ <b>"${word}"</b>.`,
                     icon: 'warning',
                     confirmButtonText: 'Tạo bộ thẻ mới',
-                    confirmButtonColor: '#FFD700',
+                    confirmButtonColor: '#FF8C00',
                 }).then((result) => {
                     if (result.isConfirmed) {
                         window.location.href = `{% url 'create_deck' %}?word=${encodeURIComponent(word)}&meaning=${encodeURIComponent(meaning)}&lang=${encodeURIComponent(lang)}`;
                     }
                 });
-                return; // Dừng tại đây
+                return;
             }
 
-            // Kịch bản B: Hiện Popup cho phép CHỌN THẲNG bộ thẻ
             Swal.fire({
                 title: 'Lưu từ vựng vào đâu?',
                 html: `Từ: <b class="text-primary">${word}</b><br>Nghĩa: <b>${meaning}</b><br><br>Vui lòng chọn bộ thẻ bạn muốn thêm vào:`,
                 icon: 'question',
                 input: 'select',
-                inputOptions: deckOptions, // Đổ danh sách bộ thẻ vào đây
+                inputOptions: deckOptions,
                 inputPlaceholder: '--- Nhấn để chọn bộ thẻ ---',
                 showCancelButton: true,
                 confirmButtonText: 'Đi tới thẻ này <i class="ph-bold ph-arrow-right"></i>',
                 cancelButtonText: 'Để sau',
-                confirmButtonColor: '#FFD700',
+                confirmButtonColor: '#FF8C00',
                 inputValidator: (value) => {
                     if (!value) {
                         return 'Bạn phải chọn một bộ thẻ để tiếp tục!';
@@ -149,16 +186,12 @@
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Chuyển hướng THẲNG đến trang tạo thẻ của bộ thẻ vừa chọn
                     const deckId = result.value;
                     const targetUrl = deckUrls[deckId];
                     window.location.href = `${targetUrl}?word=${encodeURIComponent(word)}&meaning=${encodeURIComponent(meaning)}&lang=${encodeURIComponent(lang)}`;
                 }
             });
 
-            // --- GIỮ LẠI TÍNH NĂNG DỰ PHÒNG ---
-            // Đề phòng trường hợp người dùng bấm "Để sau" tắt popup, 
-            // ta vẫn nhét sẵn data vào các nút trên màn hình
             const addCardLinks = document.querySelectorAll('.add-card-btn');
             addCardLinks.forEach(link => {
                 const originalHref = link.getAttribute('href');

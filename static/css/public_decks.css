@@ -1,0 +1,366 @@
+/* ==========================================================================
+   HỆ THỐNG TOKENS ĐỘNG: KHO THẺ CHUNG (LIGHT MODE DEFAULT)
+   ========================================================================== */
+   :root {
+    --primary-yellow: #FFC107;
+    --primary-orange: #FF8C00;
+
+    /* Search Component */
+    --search-bg: rgba(255, 255, 255, 0.9);
+    --search-border: #E2E8F0;
+    --search-focus-ring: rgba(255, 193, 7, 0.15);
+    --search-focus-glow: rgba(255, 193, 7, 0.1);
+    --search-text: #0F172A;
+    --search-placeholder: #94A3B8;
+    --search-icon: #64748B;
+    --search-icon-focus: var(--primary-orange);
+
+    /* Card Component */
+    --card-bg: #FFFFFF;
+    --card-border: rgba(226, 232, 240, 0.8);
+    --card-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.03);
+    --card-hover-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+    --card-indicator: linear-gradient(90deg, var(--primary-yellow), var(--primary-orange));
+
+    /* Text & Typo */
+    --deck-title: #0F172A;
+    --deck-meta: #64748B;
+
+    /* Icon Box */
+    --icon-box-bg: linear-gradient(135deg, #FFFDF0 0%, #FFF3CD 100%);
+    --icon-box-border: rgba(255, 193, 7, 0.3);
+    --icon-box-color: var(--primary-orange);
+    --icon-box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.8);
+    --icon-box-hover-bg: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-orange) 100%);
+    --icon-box-hover-color: #FFFFFF;
+    --icon-box-hover-shadow: 0 8px 16px rgba(255, 140, 0, 0.25);
+
+    /* Badge */
+    --badge-bg: #F8FAFC;
+    --badge-text: #334155;
+    --badge-border: #E2E8F0;
+    --badge-hover-bg: #FFFFFF;
+    --badge-hover-border: rgba(255, 193, 7, 0.3);
+
+    /* Button Action */
+    --btn-bg: linear-gradient(135deg, #FFFDF0 0%, #FFF3CD 100%);
+    --btn-color: var(--primary-orange);
+    --btn-border: rgba(255, 193, 7, 0.4);
+    --btn-hover-bg: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-orange) 100%);
+    --btn-hover-color: #FFFFFF;
+    --btn-hover-shadow: 0 6px 16px rgba(255, 140, 0, 0.3);
+
+    /* Easing */
+    --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
+    --ease-smooth: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* ==========================================================================
+   GHI ĐÈ CYBERPUNK THEME (100% ZERO !IMPORTANT)
+   ========================================================================== */
+[data-theme="cyberpunk"] {
+    --search-bg: var(--bg-input, #1A1A30);
+    --search-border: var(--border-color, #00FF41);
+    --search-focus-ring: rgba(0, 255, 65, 0.2);
+    --search-focus-glow: transparent;
+    --search-text: var(--text-main, #FFFFFF);
+    --search-placeholder: var(--text-muted, #888899);
+    --search-icon: var(--text-muted, #888899);
+    --search-icon-focus: var(--accent-color, #00FF41);
+
+    --card-bg: var(--bg-card, #121224);
+    --card-border: var(--border-color, #00FF41);
+    --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    --card-hover-shadow: 0 0 20px rgba(0, 255, 65, 0.15);
+    --card-indicator: var(--primary-gradient, linear-gradient(90deg, #00FF41, #008F11));
+
+    --deck-title: var(--text-main, #FFFFFF);
+    --deck-meta: var(--text-muted, #888899);
+
+    --icon-box-bg: var(--bg-body, #0A0A12);
+    --icon-box-border: var(--border-color, #00FF41);
+    --icon-box-color: var(--accent-color, #00FF41);
+    --icon-box-shadow: none;
+    --icon-box-hover-bg: var(--primary-gradient, linear-gradient(135deg, #00FF41, #008F11));
+    --icon-box-hover-color: #000000;
+    --icon-box-hover-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+
+    --badge-bg: var(--bg-body, #0A0A12);
+    --badge-text: var(--text-main, #FFFFFF);
+    --badge-border: var(--border-color, #00FF41);
+    --badge-hover-bg: rgba(0, 255, 65, 0.1);
+    --badge-hover-border: var(--accent-color, #00FF41);
+
+    --btn-bg: transparent;
+    --btn-color: var(--accent-color, #00FF41);
+    --btn-border: var(--accent-color, #00FF41);
+    --btn-hover-bg: var(--primary-gradient, linear-gradient(135deg, #00FF41, #008F11));
+    --btn-hover-color: #000000;
+    --btn-hover-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+}
+
+/* ==========================================================================
+   HOẠT ẢNH LÒ XO (HARDWARE ACCELERATED)
+   ========================================================================== */
+@keyframes fadeUpSpring {
+    0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+    70% { opacity: 1; transform: translateY(-2px) scale(1.02); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ==========================================================================
+   THANH TÌM KIẾM (SEARCH WRAPPER)
+   ========================================================================== */
+.search-wrapper {
+    background: var(--search-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--search-border);
+    border-radius: 16px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04), inset 0 2px 4px rgba(255, 255, 255, 0.1);
+    transition: all 0.4s var(--ease-spring);
+    margin-block-end: 40px; /* Thuộc tính logic */
+    animation: fadeUpSpring 0.6s ease-out forwards;
+    will-change: transform, box-shadow, background-color;
+
+    &:hover {
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    }
+
+    &:focus-within {
+        border-color: var(--search-focus-ring); /* Đổi sang dùng token viền focus */
+        box-shadow: 0 0 0 3px var(--search-focus-ring), 0 10px 20px var(--search-focus-glow);
+        transform: translateY(-2px);
+    }
+
+    & i {
+        font-size: 1.2rem;
+        color: var(--search-icon);
+        transition: all 0.3s ease;
+    }
+
+    &:focus-within i {
+        color: var(--search-icon-focus);
+        transform: scale(1.1);
+    }
+
+    & input {
+        border: none;
+        outline: none;
+        width: 100%;
+        padding-inline: 16px;
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: var(--search-text);
+        background: transparent;
+        font-family: inherit;
+
+        &::placeholder {
+            color: var(--search-placeholder);
+            font-weight: 400;
+            transition: color 0.3s ease;
+        }
+    }
+}
+
+/* ==========================================================================
+   LƯỚI BỘ THẺ (DECK GRID) TỐI ƯU RESPONSIVE
+   ========================================================================== */
+.deck-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); /* Ngăn lỗi tràn cột trên mobile */
+    gap: 24px;
+    padding-block-end: 40px;
+}
+
+/* ==========================================================================
+   THẺ BÀI (MODERN DECK CARD) - TÍCH HỢP CSS NESTING
+   ========================================================================== */
+.modern-deck-card {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 28px;
+    border: 1px solid var(--card-border);
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.4s var(--ease-smooth);
+    opacity: 0;
+    animation: fadeUpSpring 0.6s ease-out forwards;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    will-change: transform, box-shadow;
+
+    /* Staggered Animation Delay theo biến --i (nếu được inject từ HTML/JS) */
+    &:nth-child(n) { 
+        animation-delay: calc(var(--i, 1) * 0.06s); 
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset-block-end: 0; 
+        inset-inline-start: 0; 
+        width: 100%; 
+        height: 4px;
+        background: var(--card-indicator);
+        opacity: 0;
+        transform: translateY(100%);
+        transition: all 0.3s ease;
+        z-index: -1;
+    }
+
+    &:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--card-hover-shadow);
+        border-color: transparent;
+
+        &::after {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hover Sync xuống Icon Box */
+        & .deck-icon-box {
+            background: var(--icon-box-hover-bg);
+            color: var(--icon-box-hover-color);
+            border-color: transparent;
+            transform: scale(1.1) rotate(-8deg);
+            box-shadow: var(--icon-box-hover-shadow);
+        }
+
+        /* Hover Sync xuống Badge */
+        & .deck-badge {
+            background: var(--badge-hover-bg);
+            border-color: var(--badge-hover-border);
+        }
+
+        /* Hover Sync xuống Button */
+        & .btn-study-action {
+            background: var(--btn-hover-bg);
+            color: var(--btn-hover-color);
+            border-color: transparent;
+            box-shadow: var(--btn-hover-shadow);
+            transform: translateY(-2px);
+
+            &::before {
+                left: 200%;
+            }
+        }
+    }
+
+    /* --- Cấu trúc bên trong Thẻ --- */
+    & .card-header-flex {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-block-end: 22px;
+    }
+
+    & .deck-icon-box {
+        width: 56px;
+        height: 56px;
+        background: var(--icon-box-bg);
+        border: 1px solid var(--icon-box-border);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        color: var(--icon-box-color);
+        flex-shrink: 0;
+        transition: all 0.4s var(--ease-spring);
+        box-shadow: var(--icon-box-shadow);
+        will-change: transform, background-color;
+    }
+
+    & .deck-title {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--deck-title);
+        margin: 0 0 4px 0;
+        line-height: 1.3;
+        letter-spacing: -0.02em;
+    }
+
+    & .deck-author {
+        font-size: 0.85rem;
+        color: var(--deck-meta);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+    }
+
+    & .deck-desc {
+        font-size: 0.95rem;
+        color: var(--deck-meta);
+        line-height: 1.6;
+        margin-block-end: 28px;
+        flex-grow: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    & .card-footer-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-block-start: 20px;
+        border-block-start: 1px solid var(--card-border);
+    }
+
+    & .deck-badge {
+        background: var(--badge-bg);
+        color: var(--badge-text);
+        padding: 6px 14px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--badge-border);
+        transition: all 0.3s ease;
+
+        & i {
+            color: var(--primary-orange);
+        }
+    }
+
+    & .btn-study-action {
+        background: var(--btn-bg);
+        color: var(--btn-color);
+        border: 1px solid var(--btn-border);
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-weight: 800;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s var(--ease-spring);
+        position: relative;
+        overflow: hidden;
+
+        &::before {
+            content: "";
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s ease;
+        }
+
+        &:active {
+            transform: translateY(1px);
+        }
+    }
+}

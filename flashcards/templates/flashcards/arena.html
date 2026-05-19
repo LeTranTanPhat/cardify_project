@@ -2,73 +2,16 @@
 {% load static %}
 
 {% block content %}
-<style>
-    .arena-wrapper {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 0 15px;
-    }
+<link rel="stylesheet" href="{% static 'css/flashcard.css' %}">
 
-    .scene {
-        width: 100%;
-        height: 380px;
-        perspective: 2000px;
-        margin: 2rem 0;
-        position: relative;
-    }
-
-    .flashcard {
-        width: 100%;
-        height: 100%;
-        position: relative;
-        transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-        transform-style: preserve-3d;
-        cursor: pointer;
-    }
-
-    .flashcard.is-flipped {
-        transform: rotateY(180deg);
-    }
-
-    .card-face {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        border-radius: 28px;
-        padding: 40px;
-        text-align: center;
-        box-shadow: 0 15px 45px rgba(0,0,0,0.08);
-        border: 2px solid var(--border-color);
-        background-color: white;
-    }
-
-    .card-front { z-index: 2; }
-
-    .card-back {
-        background-color: #fff9db !important; /* var(--soft-yellow) */
-        color: #B8860B;
-        transform: rotateY(180deg);
-    }
-
-    .card-content {
-        font-size: 2.5rem;
-        font-weight: 800;
-        word-break: break-word;
-    }
-</style>
+<div class="levelup-banner" id="levelup-banner">⚡ LEVEL UP! ⚡</div>
 
 <div class="arena-wrapper mt-3">
     <div class="text-center" data-aos="fade-down">
         <h2 class="fw-bold mb-1" style="color: #2d3436;">
             <i class="ph-duotone ph-sword text-warning"></i> {{ deck.title }}
         </h2>
-        
+
         <div class="d-flex justify-content-between align-items-center mt-3 mb-2 px-2">
             <span class="text-muted fw-bold" id="progress-text">Thẻ: 1 / {{ cards.count }}</span>
             <span class="badge bg-danger text-white fs-6 shadow-sm rounded-pill py-2 px-3" id="heart-display">
@@ -103,7 +46,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="mt-5">
             <a href="{% url 'dashboard' %}" class="text-decoration-none text-muted fw-bold small">
                 <i class="ph-bold ph-house"></i> THOÁT VỀ TRANG CHỦ
@@ -112,21 +55,22 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
 <script>
-    // 1. Dữ liệu thẻ (Đã thêm ID để lưu tiến độ)
     const deckCards = [
         {% for card in cards %}
-            { 
-                id: "{{ card.id }}", 
-                front: "{{ card.front_side|escapejs }}", 
-                back: "{{ card.back_side|escapejs }}" 
+            {
+                id: "{{ card.id }}",
+                front: "{{ card.front_side|escapejs }}",
+                back: "{{ card.back_side|escapejs }}"
             },
         {% endfor %}
     ];
 
     let currentIndex = 0;
     let hearts = {{ user.profile.hearts|default:5 }};
-    let correctAnswers = 0; // Theo dõi số câu đúng trong phiên này
+    let correctAnswers = 0;
 
     const cardElement = document.getElementById('myCard');
     const frontText = document.getElementById('card-front-text');
@@ -134,8 +78,9 @@
     const controls = document.getElementById('action-controls');
     const progressText = document.getElementById('progress-text');
     const heartDisplay = document.getElementById('heart-display');
-    const navHeartsCount = document.getElementById('nav-hearts-count'); 
+    const navHeartsCount = document.getElementById('nav-hearts-count');
 
+    /* ── Lật thẻ ── */
     function flipCard() {
         if (!cardElement.classList.contains('is-flipped')) {
             cardElement.classList.add('is-flipped');
@@ -143,15 +88,14 @@
         }
     }
 
+    /* ── Load thẻ ── */
     function loadCard() {
         if (currentIndex >= deckCards.length) {
             finishSession();
             return;
         }
-
         cardElement.classList.remove('is-flipped');
         controls.style.display = 'none';
-
         setTimeout(() => {
             frontText.innerText = deckCards[currentIndex].front;
             backText.innerText = deckCards[currentIndex].back;
@@ -159,7 +103,7 @@
         }, 150);
     }
 
-    // Hàm gọi API lưu tiến độ thẻ (CardProgress)
+    /* ── Lưu tiến độ ── */
     async function saveCardProgress(cardId, isRemembered) {
         try {
             await fetch('/api/record-interaction/', {
@@ -168,66 +112,154 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({
-                    card_id: cardId,
-                    is_remembered: isRemembered
-                })
+                body: JSON.stringify({ card_id: cardId, is_remembered: isRemembered })
             });
         } catch (error) {
             console.error("Không thể lưu tiến độ thẻ:", error);
         }
     }
 
-    function markCard(isRemembered) {
-        const currentCardId = deckCards[currentIndex].id;
-        
-        // Ghi lại tiến độ ngay lập tức (chạy ngầm)
-        saveCardProgress(currentCardId, isRemembered);
+    /* ── Animation: Tim vỡ ── */
+    function burstHeart() {
+        const badge = document.getElementById('heart-display');
+        const rect = badge.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
 
+        const container = document.createElement('div');
+        container.className = 'heart-burst-container';
+        document.body.appendChild(container);
+
+        const count = 6;
+        for (let i = 0; i < count; i++) {
+            const el = document.createElement('div');
+            el.className = 'heart-shard';
+            el.textContent = '💔';
+            const angle = (360 / count) * i + Math.random() * 30;
+            const dist = 60 + Math.random() * 80;
+            const dx = Math.cos(angle * Math.PI / 180) * dist;
+            const dy = Math.sin(angle * Math.PI / 180) * dist;
+            el.style.cssText = `
+                left: ${cx}px;
+                top: ${cy}px;
+                --dx: ${dx}px;
+                --dy: ${dy}px;
+                --rot: ${-180 + Math.random() * 360}deg;
+            `;
+            container.appendChild(el);
+        }
+
+        setTimeout(() => container.remove(), 1000);
+    }
+
+    /* ── Animation: Bắn Pháo Hoa (Confetti) ── */
+    function launchConfetti() {
+        const duration = 2500; // Pháo hoa nổ trong 2.5 giây
+        const end = Date.now() + duration;
+
+        const defaults = { 
+            startVelocity: 45, 
+            spread: 90,        
+            ticks: 80,         
+            zIndex: 999999,    
+            colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFFFFF']
+        };
+
+        const interval = setInterval(function() {
+            const timeLeft = end - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+
+            const particleCount = 40 * (timeLeft / duration);
+            
+            // Pháo bắn từ góc dưới bên trái
+            confetti({
+                ...defaults, 
+                particleCount,
+                angle: 60,
+                origin: { x: 0, y: 1 } 
+            });
+            
+            // Pháo bắn từ góc dưới bên phải
+            confetti({
+                ...defaults, 
+                particleCount,
+                angle: 120,
+                origin: { x: 1, y: 1 } 
+            });
+        }, 250); 
+    }
+
+    /* ── Animation: Level Up ── */
+    function showLevelUp() {
+        const banner = document.getElementById('levelup-banner');
+        if (banner) {
+            banner.classList.remove('show');
+            void banner.offsetWidth; 
+            banner.classList.add('show');
+            
+            setTimeout(() => {
+                banner.classList.remove('show');
+            }, 2500);
+        }
+    }
+
+    /* ── Đánh dấu thẻ ── */
+    async function markCard(isRemembered) { 
+        const currentCardId = deckCards[currentIndex].id;
+        saveCardProgress(currentCardId, isRemembered);
+    
         if (!isRemembered) {
-            // XỬ LÝ KHI QUÊN
-            fetch('/reduce-heart/', { 
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
+            burstHeart();
+            try {
+                const response = await fetch('/reduce-heart/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+                const data = await response.json();
+                
                 if (data.hearts !== undefined) {
                     hearts = data.hearts;
                     heartDisplay.innerHTML = `<i class="ph-fill ph-heart"></i> ${hearts}`;
                     if (navHeartsCount) navHeartsCount.innerText = `${hearts}/5`;
-
+                    
                     if (hearts <= 0) {
                         showGameOver();
-                    } else {
-                        currentIndex++;
-                        loadCard();
+                        return;
                     }
                 }
-            });
-        } else {
-            // XỬ LÝ KHI NHỚ
-            correctAnswers++;
-            if (typeof gainXP === 'function') {
-                gainXP(15);
+            } catch (e) {
+                console.error("Lỗi giảm tim:", e);
             }
+            
+            currentIndex++;
+            loadCard();
+        } else {
+            correctAnswers++;
+    
+            if (typeof gainXP === 'function') {
+                const didLevelUp = await gainXP(15); 
+                if (didLevelUp) {
+                    showLevelUp(); 
+                    launchConfetti(); // GỌI PHÁO HOA KHI LÊN CẤP Ở ĐÂY
+                }
+            }
+    
             currentIndex++;
             loadCard();
         }
     }
 
-    // HÀM QUAN TRỌNG ĐÃ ĐƯỢC SỬA ĐỂ LƯU LỊCH SỬ VÀO DATABASE
+    /* ── Kết thúc phiên ── */
     async function finishSession() {
-        // 1. Tính tổng XP đạt được (Ví dụ: 15 XP mỗi câu đúng + 50 XP hoàn thành)
         let totalXpGained = (correctAnswers * 15) + 50;
-
-        // 2. Gọi hàm cộng XP trên giao diện (nếu có)
         if (typeof gainXP === 'function') gainXP(50);
 
-        // 3. GỌI API LƯU LỊCH SỬ PHIÊN HỌC VÀO DATABASE
         try {
             await fetch('/api/save-session/', {
                 method: 'POST',
@@ -246,9 +278,14 @@
             console.error("Lỗi khi lưu lịch sử:", error);
         }
 
-        // 4. Hiển thị thông báo và chuyển hướng
-        const accuracy = deckCards.length > 0 ? Math.round((correctAnswers / deckCards.length) * 100) : 0;
+        const accuracy = deckCards.length > 0
+            ? Math.round((correctAnswers / deckCards.length) * 100)
+            : 0;
 
+        // Bắn pháo hoa ăn mừng học xong
+        launchConfetti();
+
+        // HIỆN BẢNG THÔNG BÁO HOÀN THÀNH (Đã được khôi phục)
         Swal.fire({
             title: '🎉 Hoàn thành phiên học!',
             html: `
@@ -262,11 +299,13 @@
             confirmButtonText: 'Xem lịch sử học tập',
             confirmButtonColor: '#27ae60'
         }).then(() => {
-            // Chuyển thẳng sang trang lịch sử để xem thành quả
-            window.location.href = "{% url 'study_history' %}";
+            // Lưu ý: Đảm bảo bạn đã có url 'study_history' trong urls.py của Django, 
+            // Nếu chưa có, bạn có thể tạm đổi thành 'dashboard'
+            window.location.href = "{% url 'study_history' %}"; 
         });
     }
 
+    /* ── Game Over ── */
     function showGameOver() {
         Swal.fire({
             title: 'Hết máu rồi! 💔',
@@ -279,7 +318,6 @@
         });
     }
 
-    // Khởi chạy
     loadCard();
 </script>
 {% endblock %}

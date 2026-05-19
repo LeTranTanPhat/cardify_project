@@ -1,76 +1,161 @@
 /* ==========================================================================
-   1. NÚT BẤM VÀ THẺ (BUTTONS & CARDS)
+   1. NÚT BẤM (LIQUID GLASS & MICRO-BORDER)
    ========================================================================== */
    .btn-yellow {
-    background-color: var(--primary-yellow);
-    color: var(--dark-text);
-    border: none;
-    font-weight: bold;
-    padding: 10px 24px;
-    border-radius: 8px;
-    transition: all 0.3s;
+    background: var(--primary-gradient);
+    color: var(--dark-text, #0F172A); 
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    font-weight: 850;
+    padding: 14px 32px;
+    border-radius: 14px;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                box-shadow 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    /* Tia sáng lướt qua */
+    &::before {
+        content: "";
+        position: absolute;
+        top: 0; left: -150%;
+        width: 60%; height: 100%;
+        background: linear-gradient(
+            90deg, 
+            transparent, 
+            rgba(255, 255, 255, 0.45) 30%, 
+            rgba(255, 255, 255, 0.1) 70%, 
+            transparent
+        );
+        transform: skewX(-25deg);
+        transition: left 0.75s cubic-bezier(0.25, 1, 0.5, 1);
+        z-index: -1;
+    }
+
+    &:hover, 
+    &:focus-visible {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 12px 20px -4px rgba(255, 193, 7, 0.35), var(--shadow-glow, 0 0 15px rgba(255, 193, 7, 0.4));
+
+        &::before {
+            left: 250%;
+        }
+    }
+
+    &:active {
+        transform: translateY(1px) scale(0.98); 
+        box-shadow: var(--shadow-sm);
+    }
 }
 
-.btn-yellow:hover {
-    background-color: #ECC400;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
-}
-
+/* Thẻ cơ bản (Deck Card) */
 .deck-card {
-    background: var(--white);
+    background: var(--white, #FFFFFF);
     border: 1px solid var(--border-color);
-    border-radius: 15px;
-    transition: all 0.3s ease;
-}
+    border-radius: 24px;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.01), 0 4px 12px rgba(15, 23, 42, 0.02);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                border-color 0.4s ease, 
+                box-shadow 0.4s ease;
+    position: relative;
+    outline: none;
+    padding: 16px;
 
-.deck-card:hover {
-    transform: translateY(-8px);
-    border-color: var(--primary-yellow);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.05);
+    &:hover,
+    &:focus-within {
+        transform: translateY(-8px) scale(1.01);
+        border-color: var(--primary-yellow);
+        box-shadow: 0 20px 32px -8px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+    }
 }
 
 /* ==========================================================================
-   2. ĐỒNG HỒ POMODORO (TRẠM HỒI NĂNG LƯỢNG)
+   2. ĐỒNG HỒ POMODORO (GLASS-NEUMORPHISM ĐÃ FIX SHADOW JUMP)
    ========================================================================== */
 .timer-circle {
-    width: 320px; 
-    height: 320px; 
+    --neu-shadow-dark: rgba(166, 180, 200, 0.25);
+    --neu-shadow-light: #FFFFFF;
+    
+    width: clamp(260px, 38vw, 320px); 
+    height: clamp(260px, 38vw, 320px); 
     border-radius: 50%;
-    background-color: var(--white); 
-    border: 12px solid #f0f0f0;
+    background: radial-gradient(circle at 30% 30%, var(--white, #FFFFFF) 0%, var(--bg-light, #F8FAFC) 100%); 
+    border: 10px solid rgba(248, 250, 252, 0.8);
     display: flex; 
     align-items: center; 
     justify-content: center;
     margin: 0 auto; 
-    box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+    /* Giữ mảng bóng gốc làm token để tái sử dụng */
+    box-shadow: 
+        16px 16px 40px var(--neu-shadow-dark), 
+        -16px -16px 40px var(--neu-shadow-light),
+        inset 0 2px 8px rgba(15, 23, 42, 0.02); 
+    will-change: transform, box-shadow;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                border-color 0.4s ease, 
+                box-shadow 0.5s ease; /* Thêm transition cho box-shadow */
     position: relative;
+    isolation: isolate;
+
+    &.running { 
+        border-color: var(--primary-yellow); 
+        /* CỘNG DỒN glow thay vì GHI ĐÈ, giữ lại độ sâu khối 3D */
+        box-shadow: 
+            0 0 0 12px rgba(255, 193, 7, 0.06),
+            16px 16px 40px var(--neu-shadow-dark), 
+            -16px -16px 40px var(--neu-shadow-light),
+            inset 0 2px 8px rgba(15, 23, 42, 0.02);
+        animation: chargingPulse 4s infinite ease-in-out; 
+
+        &::after {
+            content: "";
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            box-shadow: 0 0 0 6px var(--primary-yellow);
+            animation: ripple 3s infinite cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0;
+            z-index: -1;
+        }
+    }
 }
 
 .timer-text { 
-    font-size: 4.5rem; 
-    font-weight: 700; 
-    font-family: 'Orbitron', sans-serif; 
+    font-size: clamp(3.8rem, 6vw, 5.2rem); 
+    font-weight: 900; 
+    font-family: 'Inter', system-ui, sans-serif; 
     color: var(--dark-text); 
-}
-
-.timer-circle.running { 
-    border-color: var(--primary-yellow); 
-    animation: chargingPulse 2s infinite; 
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    text-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    z-index: 2;
 }
 
 @keyframes chargingPulse { 
     0%, 100% { transform: scale(1); } 
-    50% { transform: scale(1.02); } 
+    50% { transform: scale(1.025); } 
+}
+
+@keyframes ripple {
+    0% { transform: scale(1); opacity: 0.6; }
+    50% { opacity: 0.3; }
+    100% { transform: scale(1.25); opacity: 0; }
 }
 
 /* ==========================================================================
-   3. GIAO DIỆN HỌC THẺ (FLASHCARD 3D)
+   3. GIAO DIỆN HỌC THẺ (IRIDESCENT HOLOGRAPHIC FLASHCARD 3D)
    ========================================================================== */
 .scene {
     width: 100%;
-    height: 380px;
-    perspective: 2000px;
+    height: clamp(360px, 55vh, 430px); 
+    perspective: 2500px;
     margin: 2rem 0;
 }
 
@@ -78,34 +163,108 @@
     width: 100%;
     height: 100%;
     position: relative;
-    transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.75s cubic-bezier(0.34, 1.7, 0.64, 1); 
     transform-style: preserve-3d;
     cursor: pointer;
+    outline: none;
+
+    &.is-flipped { 
+        transform: rotateY(180deg) scale(1.01); 
+
+        &:hover,
+        &:focus-visible {
+            transform: translateY(-10px) rotateY(182deg) rotateX(-2px);
+        }
+    }
+
+    &:hover:not(.is-flipped),
+    &:focus-visible:not(.is-flipped) {
+        transform: translateY(-10px) rotateX(5deg) rotateY(2deg);
+    }
 }
 
-.flashcard.is-flipped { transform: rotateY(180deg); }
-
+/* KHÔNG dùng !important, định vị qua cấu trúc lồng nhau chặt chẽ */
 .card-face {
     position: absolute;
-    width: 100%; height: 100%;
+    inset: 0;
+    width: 100%; 
+    height: 100%;
     backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-radius: 28px;
-    padding: 40px;
-    border: 2px solid var(--border-color);
-    background: var(--white);
+    border-radius: 36px;
+    padding: clamp(24px, 6vw, 48px);
+    border: 1px solid var(--border-color); 
+    background: var(--white, #FFFFFF);
+    box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.02);
+    box-sizing: border-box;
+    overflow: hidden; 
+    transition: box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.4s ease;
+
+    .flashcard:hover &,
+    .flashcard:focus-visible & {
+        box-shadow: 0 30px 50px -15px rgba(15, 23, 42, 0.12), 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+    }
+
+    .flashcard:focus-visible & {
+        border-color: var(--primary-yellow);
+        box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 6px rgba(255, 193, 7, 0.35), 0 20px 40px rgba(0,0,0,0.08);
+    }
+
+    /* Hiệu ứng cầu vồng Holographic */
+    &::after {
+        content: "";
+        position: absolute;
+        top: -50%; left: -150%; width: 80%; height: 200%;
+        background: linear-gradient(
+            115deg, 
+            transparent 25%, 
+            rgba(255, 255, 255, 0.5) 35%, 
+            rgba(255, 234, 167, 0.25) 42%, 
+            rgba(255, 255, 255, 0.5) 50%, 
+            transparent 65%
+        );
+        transform: skewX(-30deg);
+        transition: left 0.85s cubic-bezier(0.25, 1, 0.5, 1); 
+        pointer-events: none;
+    }
+
+    .flashcard:hover &::after,
+    .flashcard:focus-visible &::after {
+        left: 220%;
+    }
 }
 
+/* Mặt sau - Kế thừa mặt trước (dùng class kết hợp html: <div class="card-face card-back">) */
 .card-back {
-    background-color: var(--soft-yellow);
+    background: linear-gradient(135deg, var(--white, #FFFFFF) 0%, #FFFDF0 50%, #FEF3C7 100%);
     transform: rotateY(180deg);
-    border-color: var(--primary-yellow);
+    border-color: rgba(255, 193, 7, 0.35); 
 }
 
 .card-content {
-    font-size: 2.5rem;
-    font-weight: 800;
+    font-size: clamp(1.8rem, 4.5vw, 2.8rem); 
+    font-weight: 850;
+    line-height: 1.3;
+    text-wrap: balance; 
+    color: var(--dark-text);
+    word-break: break-word;
+    letter-spacing: -0.02em;
+}
+
+/* ==========================================================================
+   4. KHUNG MODAL VÀ FOOTER (FIX LỖI VỠ LAYOUT NÚT LƯU)
+   ========================================================================== */
+   .modal-footer {
+    display: flex;
+    justify-content: flex-end; /* Đẩy nút Lưu thay đổi sang góc bên phải */
+    align-items: center;
+    padding: 20px 24px;       /* Tạo khoảng cách trống (padding) an toàn với các cạnh */
+    margin-top: 24px;         /* Khoảng cách giữa nút và phần Cyberpunk phía trên */
+    border-top: 1px solid var(--border-color); /* Đường kẻ mỏng ngăn cách sang trọng */
+    width: 100%;
+    box-sizing: border-box;   /* Chống tràn chiều rộng */
 }

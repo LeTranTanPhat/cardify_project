@@ -28,40 +28,6 @@
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background-color: var(--white);" data-aos="fade-up">
-            <h5 class="fw-bold text-muted mb-4">
-                <i class="ph-fill ph-magic-wand text-warning fs-4 me-1" style="vertical-align: middle;"></i> Tự động tạo thẻ bằng AI
-            </h5>
-            
-            <div class="ai-dropzone" id="drop-zone">
-                <i class="ph ph-cloud-arrow-up"></i>
-                <h5 class="fw-bold text-dark mb-2">Kéo và thả tài liệu vào đây</h5>
-                <p class="text-muted mb-4">hoặc click để chọn tệp từ máy (Hỗ trợ: PDF, JPG, PNG)</p>
-                <button type="button" class="btn btn-yellow px-4 py-2 rounded-pill fw-bold shadow-sm" onclick="document.getElementById('file-input').click()">
-                    Chọn tệp ngay
-                </button>
-                <input type="file" id="file-input" class="ai-file-input" accept=".pdf, image/png, image/jpeg">
-            </div>
-
-            <div class="skeleton-wrapper" id="skeleton-loading">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h6 class="fw-bold m-0 text-warning">
-                        <i class="ph ph-spinner-gap fa-spin me-2"></i> AI đang phân tích dữ liệu và tạo thẻ...
-                    </h6>
-                </div>
-                <div class="skeleton-header">
-                    <div class="skeleton-circle overflow-hidden position-relative"></div>
-                    <div class="flex-grow-1">
-                        <div class="skeleton-line medium"></div>
-                        <div class="skeleton-line short"></div>
-                    </div>
-                </div>
-                <div class="skeleton-line long"></div>
-                <div class="skeleton-line long"></div>
-                <div class="skeleton-line medium"></div>
-            </div>
-        </div>
-
         <div class="card border-0 shadow-sm rounded-4 p-4 mb-5" style="background-color: var(--white);" data-aos="fade-up" data-aos-delay="100">
             <h5 class="fw-bold text-muted mb-4">
                 <i class="ph-fill ph-plus-circle text-primary fs-4 me-1" style="vertical-align: middle;"></i> Thêm Flashcard thủ công
@@ -145,7 +111,7 @@
                 <div class="col-12 text-center py-5 text-muted" data-aos="zoom-in">
                     <i class="ph-duotone ph-cards fs-1 mb-3 text-warning"></i>
                     <h5 class="fw-bold">Chưa có từ vựng nào!</h5>
-                    <p>Hãy tải lên tài liệu cho AI hoặc dùng form bên trên để thêm thẻ nhé.</p>
+                    <p>Hãy dùng form bên trên để thêm thẻ nhé.</p>
                 </div>
                 {% endfor %}
             </div>
@@ -271,105 +237,6 @@
             
             // Xóa tham số trên thanh địa chỉ sau khi điền
             window.history.replaceState({}, document.title, window.location.pathname);
-        }
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-        const skeletonLoading = document.getElementById('skeleton-loading');
-        const toastContainer = document.getElementById('toast-container');
-        
-        // Lấy deck_id từ URL hoặc template (Django đã render URL hiện tại)
-        const deckId = "{{ deck.id }}"; 
-
-        if(dropZone && fileInput && skeletonLoading) {
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, preventDefaults, false);
-            });
-
-            function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
-            });
-
-            dropZone.addEventListener('drop', (e) => {
-                handleFiles(e.dataTransfer.files);
-            });
-
-            fileInput.addEventListener('change', function() {
-                handleFiles(this.files);
-            });
-
-            function handleFiles(files) {
-                if (files.length === 0) return;
-                
-                let file = files[0];
-                showToast('Đang gửi tệp lên AI: ' + file.name, 'success', 'ph-cloud-arrow-up');
-
-                // Đổi giao diện sang trạng thái loading
-                dropZone.style.display = 'none';
-                skeletonLoading.style.display = 'block';
-
-                // Chuẩn bị form data để gửi file
-                let formData = new FormData();
-                formData.append('file', file);
-
-                // Bắn API tới hàm ai_generate_cards trong views.py
-                fetch(`/deck/${deckId}/ai-generate/`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    skeletonLoading.style.display = 'none';
-                    if(data.status === 'success') {
-                        showToast(data.message, 'success', 'ph-magic-wand');
-                        // Load lại trang sau 1.5s để hiển thị thẻ mới
-                        setTimeout(() => window.location.reload(), 1500);
-                    } else {
-                        showToast(data.message, 'error', 'ph-warning-circle');
-                        dropZone.style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    skeletonLoading.style.display = 'none';
-                    showToast('Có lỗi hệ thống khi kết nối tới AI.', 'error', 'ph-warning-circle');
-                    dropZone.style.display = 'block';
-                });
-                
-                fileInput.value = ''; // Reset input
-            }
-        }
-
-        window.showToast = function(message, type = 'success', iconClass = 'ph-info') {
-            const toast = document.createElement('div');
-            toast.className = `custom-toast ${type}`;
-            toast.innerHTML = `
-                <i class="ph ${iconClass} fs-3"></i>
-                <div>
-                    <h6 class="fw-bold mb-1 m-0">${type === 'success' ? 'Thành công' : 'Lỗi'}</h6>
-                    <p class="text-muted m-0" style="font-size: 0.9rem;">${message}</p>
-                </div>
-            `;
-            if(toastContainer) {
-                toastContainer.appendChild(toast);
-                setTimeout(() => toast.classList.add('show'), 10);
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                    setTimeout(() => toast.remove(), 400);
-                }, 4000);
-            }
         }
     });
 </script>

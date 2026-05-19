@@ -1,26 +1,476 @@
+
 /* ==========================================================================
-   1. BIẾN VÀ CẤU HÌNH CHUNG
+   1. HỆ THỐNG BIẾN SỐ & THEME (GLOBAL VARIABLES - NEOMORPHIC & SAAS ULTRA)
    ========================================================================== */
    :root {
-    --primary-yellow: #FFD700;
-    --primary-orange: #FF9800;
-    --soft-yellow: #FFF9E3;
-    --dark-text: #2D3436;
-    --light-gray: #F4F7F6;
-    --white: #FFFFFF;
-    --border-color: #E0E0E0;
-    --sidebar-width: 260px;
-    --danger-red: #dc3545;
-    --soft-red: #fff5f5;
+    /* Chế độ Sáng (Premium Light) - Phối màu Slate Không Gian */
+    --bg-body: #F8FAFC;
+    --bg-sidebar: #FFFFFF;
+    --bg-card: #FFFFFF;
+    --bg-input: #FFFFFF;
+    --input-bg-alt: #F1F5F9; 
+    
+    --text-main: #0F172A;   /* Slate 900 - Gai góc, độ tương phản cao */
+    --text-muted: #64748B;  /* Slate 500 */
+    --border-color: #E2E8F0;
+    
+    /* Accent Sắc Độ Cao */
+    --accent-color: #F59E0B;
+    --primary-yellow: #F59E0B;
+    --primary-orange: #EA580C;
+    --primary-gradient: linear-gradient(135deg, #F59E0B 0%, #EA580C 100%);
+    
+    /* Functional Colors */
+    --focus-ring: rgba(245, 158, 11, 0.15);
+    --danger-red: #EF4444;
+    --soft-red: #FEF2F2;
+    --success-green: #10B981;
+    --soft-yellow: #FEF3C7;
+
+    /* Hệ Bóng Đổ Đa Tầng Khuếch Tán (Ambient Occlusion Shadows) */
+    --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.03);
+    --shadow-md: 0 4px 12px -1px rgba(15, 23, 42, 0.04), 0 2px 4px -1px rgba(15, 23, 42, 0.02);
+    --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.06), 0 10px 10px -6px rgba(15, 23, 42, 0.02);
+    --shadow-modal: 0 25px 60px -15px rgba(15, 23, 42, 0.12), 0 0 1px 1px rgba(15, 23, 42, 0.02);
+
+    /* Cung Chuyển Động Vật Lý Lò Xo Gốc (Apple UI Standards) */
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-html {
-    scroll-behavior: smooth;
+/* CHẾ ĐỘ CYBERPUNK 2.0 (Premium Matrix Dark Mode) */
+[data-theme="cyberpunk"] {
+    --bg-body: #05050A;
+    --bg-sidebar: #0A0A10;
+    --bg-card: #0D0E16;
+    --bg-input: #07080D;
+    --input-bg-alt: #121422; 
+    
+    --text-main: #00FF66 !important; /* Xanh Neon Quang Học */
+    --text-muted: #008F39 !important;
+    --border-color: rgba(0, 255, 102, 0.18) !important;
+    
+    --accent-color: #00FF66 !important;
+    --primary-gradient: linear-gradient(135deg, #00FF66 0%, #00A344 100%) !important;
+    --focus-ring: rgba(0, 255, 102, 0.25) !important;
+    
+    --shadow-modal: 0 0 35px rgba(0, 255, 102, 0.15) !important;
+    --shadow-lg: 0 0 25px rgba(0, 0, 0, 0.75) !important;
+    
+    /* Bổ sung biến môi trường kĩ thuật số cho Cyberpunk */
+    --cyber-scanlines: linear-gradient(rgba(0, 255, 102, 0.01) 50%, rgba(0, 0, 0, 0.1) 50%);
+    --cyber-glow: 0 0 12px rgba(0, 255, 102, 0.3);
+}
+
+/* ==========================================================================
+   2. ÉP THEME CHO DASHBOARD & TRANG CHÍNH (SỬA LỖI TRẮNG NỀN TẬN GỐC)
+   ========================================================================== */
+html { 
+    scroll-behavior: smooth; 
+    overscroll-behavior-y: none; 
+    font-size: 16px;
 }
 
 body {
-    background-color: var(--light-gray);
-    color: var(--dark-text);
-    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     margin: 0;
+    line-height: 1.5;
+    transition: background-color 0.4s var(--ease-smooth), color 0.4s var(--ease-smooth);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* 1. KHỬ TRẮNG NỀN TỔNG THỂ */
+[data-theme="cyberpunk"] body,
+[data-theme="cyberpunk"] main,
+[data-theme="cyberpunk"] .main-content,
+[data-theme="cyberpunk"] .content-wrapper,
+[data-theme="cyberpunk"] .container-fluid,
+[data-theme="cyberpunk"] .bg-light {
+    background-color: var(--bg-body) !important;
+    color: var(--text-main) !important;
+    background-image: var(--cyber-scanlines);
+    background-size: 100% 4px;
+}
+
+/* 2. KHỬ TRẮNG CÁC THẺ CARD & KHỐI (Vát góc Sci-Fi) */
+[data-theme="cyberpunk"] .card,
+[data-theme="cyberpunk"] .card-body,
+[data-theme="cyberpunk"] .bg-white,
+[data-theme="cyberpunk"] .flashcard-item,
+[data-theme="cyberpunk"] .dashboard-item,
+[data-theme="cyberpunk"] .ai-dropzone,
+[data-theme="cyberpunk"] .modal-content {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-main) !important;
+    box-shadow: var(--shadow-lg) !important;
+    border-radius: 0px !important;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+}
+
+/* 3. ÉP MÀU CHỮ BỊ KẸT */
+[data-theme="cyberpunk"] p,
+[data-theme="cyberpunk"] span,
+[data-theme="cyberpunk"] label,
+[data-theme="cyberpunk"] .text-dark,
+[data-theme="cyberpunk"] .text-muted,
+[data-theme="cyberpunk"] .card-text {
+    color: #00BB4A !important; /* Hạ một tone so với text-main để phân cấp nội dung */
+}
+
+/* 4. ÉP MÀU TIÊU ĐỀ & BẢNG */
+[data-theme="cyberpunk"] h1, 
+[data-theme="cyberpunk"] h2, 
+[data-theme="cyberpunk"] h3, 
+[data-theme="cyberpunk"] h4, 
+[data-theme="cyberpunk"] h5, 
+[data-theme="cyberpunk"] .card-title {
+    color: var(--text-main) !important;
+    text-shadow: var(--cyber-glow);
+    letter-spacing: -0.02em;
+}
+
+[data-theme="cyberpunk"] .table {
+    color: var(--text-main) !important;
+    background-color: transparent !important;
+}
+
+[data-theme="cyberpunk"] .table td, 
+[data-theme="cyberpunk"] .table th {
+    border-color: var(--border-color) !important;
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+}
+
+/* 5. ÉP MÀU NÚT BẤM BỊ TRẮNG */
+[data-theme="cyberpunk"] .btn-outline-primary,
+[data-theme="cyberpunk"] .btn-light,
+[data-theme="cyberpunk"] .btn-white {
+    background-color: transparent !important;
+    border: 1px solid var(--accent-color) !important;
+    color: var(--accent-color) !important;
+    border-radius: 0px !important;
+    text-transform: uppercase;
+}
+
+[data-theme="cyberpunk"] .btn-outline-primary:hover,
+[data-theme="cyberpunk"] .btn-light:hover {
+    background-color: var(--accent-color) !important;
+    color: #000000 !important;
+    box-shadow: 0 0 15px var(--accent-color) !important;
+}
+
+/* Hệ thống thanh cuộn Hiện đại */
+scrollbar-width: thin;
+scrollbar-color: #CBD5E1 transparent;
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 20px;
+}
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+[data-theme="cyberpunk"] ::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+}
+
+/* ==========================================================================
+   3. LAYOUT CHÍNH (SIDEBAR & NAVBAR - GLASSMORPHISM COATING)
+   ========================================================================== */
+.sidebar { 
+    background-color: var(--bg-sidebar); 
+    border-right: 1px solid var(--border-color); 
+    backdrop-filter: blur(8px);
+}
+
+.top-navbar { 
+    background-color: rgba(255, 255, 255, 0.8); 
+    border-bottom: 1px solid var(--border-color); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    position: sticky; top: 0; z-index: 100;
+}
+
+[data-theme="cyberpunk"] .top-navbar {
+    background-color: rgba(10, 10, 16, 0.8) !important;
+}
+
+.energy-bar-container, .level-xp-container { 
+    background: var(--input-bg-alt) !important; 
+    border: 1px solid var(--border-color) !important; 
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.nav-link:not(.active) { 
+    color: var(--text-muted); 
+    transition: var(--ease-smooth);
+}
+.nav-link:not(.active):hover {
+    color: var(--text-main);
+    transform: translateX(4px);
+}
+
+.nav-link.active { 
+    color: var(--text-main); 
+    font-weight: 700;
+    background: rgba(245, 158, 11, 0.08); 
+    border-radius: 10px;
+}
+[data-theme="cyberpunk"] .nav-link.active {
+    background: rgba(0, 255, 102, 0.1);
+    color: var(--text-main) !important;
+    border-left: 3px solid var(--accent-color);
+    border-radius: 0px;
+}
+
+/* ==========================================================================
+   4. AUTHENTICATION (LOGIN & REGISTER - 3D FLOATING EFFECTS)
+   ========================================================================== */
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background-color: var(--bg-body);
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.auth-card {
+    width: 100%; max-width: 420px;
+    background: var(--bg-card);
+    border-radius: 28px;
+    padding: clamp(2rem, 5vw, 3.5rem) 2.5rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+    animation: slideUpSpring 0.7s var(--ease-spring) forwards;
+}
+
+.auth-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 6px; background: var(--primary-gradient);
+}
+
+.auth-input {
+    width: 100%; padding: 14px 20px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border-color);
+    background: var(--bg-input);
+    color: var(--text-main);
+    font-size: 1rem;
+    transition: var(--ease-smooth);
+    box-sizing: border-box;
+}
+
+.auth-input:focus {
+    border-color: var(--primary-yellow);
+    box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 5px var(--focus-ring);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.auth-btn {
+    width: 100%; padding: 15px; border-radius: 14px;
+    background: var(--primary-gradient);
+    color: #FFFFFF; font-weight: 700; border: none;
+    font-size: 1rem; cursor: pointer; 
+    transition: var(--ease-spring);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.auth-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3), var(--shadow-md);
+}
+.auth-btn:active { transform: translateY(1px); }
+
+[data-theme="cyberpunk"] .auth-btn {
+    color: #000000 !important;
+    border-radius: 0px;
+    box-shadow: var(--cyber-glow);
+}
+
+/* ==========================================================================
+   5. MODAL CÀI ĐẶT (SETTINGS)
+   ========================================================================== */
+.settings-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 10000;
+}
+
+.settings-overlay.show { display: flex; }
+
+.settings-modal {
+    background: var(--bg-card);
+    width: 460px; max-width: 95%;
+    border-radius: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-modal);
+    overflow: hidden;
+    animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.settings-header { 
+    padding: 20px 24px; 
+    border-bottom: 1px solid var(--border-color); 
+    display: flex; justify-content: space-between; align-items: center; 
+}
+
+.section-title { 
+    font-size: 0.75rem; text-transform: uppercase; 
+    letter-spacing: 0.08em; color: var(--text-muted); 
+    margin-bottom: 16px; display: block; font-weight: 800;
+}
+
+.form-control-cyber {
+    width: 100%; padding: 12px 16px;
+    background: var(--input-bg-alt);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-main);
+    margin-bottom: 14px;
+    box-sizing: border-box;
+    transition: var(--ease-smooth);
+}
+.form-control-cyber:focus {
+    border-color: var(--primary-yellow);
+    background: var(--bg-card);
+    outline: none;
+}
+
+/* Thiết kế Switch Toggle Viên Thuốc Cao Cấp */
+.theme-toggle-wrapper {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--input-bg-alt); padding: 16px 20px; border-radius: 16px;
+}
+
+.cyber-switch { position: relative; width: 52px; height: 28px; }
+.cyber-switch input { opacity: 0; width: 0; height: 0; }
+.cyber-slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: #E2E8F0; border-radius: 30px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cyber-slider:before {
+    position: absolute; content: ""; height: 22px; width: 22px;
+    left: 3px; bottom: 3px; background: white; border-radius: 50%; 
+    transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: var(--shadow-sm);
+}
+input:checked + .cyber-slider { background: var(--accent-color); }
+input:checked + .cyber-slider:before { transform: translateX(24px); }
+
+[data-theme="cyberpunk"] input:checked + .cyber-slider {
+    box-shadow: 0 0 12px var(--accent-color);
+}
+[data-theme="cyberpunk"] .cyber-slider {
+    background: #1A1A26;
+}
+[data-theme="cyberpunk"] .cyber-slider:before {
+    border-radius: 0px;
+}
+
+/* ==========================================================================
+   6. POMODORO & ACTIONS (HIGH ENERGY BREATHING METER)
+   ========================================================================== */
+.timer-circle {
+    width: clamp(240px, 35vw, 280px); 
+    height: clamp(240px, 35vw, 280px); 
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 10px solid var(--input-bg-alt);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto; box-shadow: var(--shadow-md);
+    transition: transform 0.4s var(--ease-spring), border-color 0.4s ease, box-shadow 0.4s ease;
+    isolation: isolate;
+}
+
+.timer-circle.running {
+    border-color: var(--accent-color);
+    animation: pomodoro-breathe 4s infinite ease-in-out;
+}
+
+@keyframes pomodoro-breathe {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 0 0 8px var(--focus-ring), var(--shadow-md); 
+    }
+    50% { 
+        transform: scale(1.02);
+        box-shadow: 0 0 0 20px var(--focus-ring), var(--shadow-lg); 
+    }
+}
+
+.btn-edit { background: var(--soft-yellow); color: var(--primary-orange); border:none; padding: 10px; border-radius: 10px; cursor: pointer; transition: var(--ease-spring);}
+.btn-delete { background: var(--soft-red); color: var(--danger-red); border:none; padding: 10px; border-radius: 10px; cursor: pointer; transition: var(--ease-spring);}
+
+.btn-edit:hover, .btn-delete:hover { transform: translateY(-2px) scale(1.05); }
+.btn-edit:active, .btn-delete:active { transform: translateY(1px); }
+
+[data-theme="cyberpunk"] .btn-edit,
+[data-theme="cyberpunk"] .btn-delete {
+    background: transparent !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 0px !important;
+}
+[data-theme="cyberpunk"] .btn-edit { color: var(--text-main) !important; }
+[data-theme="cyberpunk"] .btn-delete { color: #FF0055 !important; border-color: #FF0055 !important; }
+
+
+/* ==========================================================================
+   7. KEYFRAMES
+   ========================================================================== */
+@keyframes slideUpSpring {
+    0% { opacity: 0; transform: translateY(30px) scale(0.96); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes modalSlideUp {
+    from { transform: translateY(20px) scale(0.98); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* ==========================================================================
+   8. BẢN VÁ LỖI TRẮNG NỀN MỞ RỘNG (INPUT, SELECT, BADGE)
+   ========================================================================== */
+[data-theme="cyberpunk"] .form-control,
+[data-theme="cyberpunk"] .form-select,
+[data-theme="cyberpunk"] input[type="text"],
+[data-theme="cyberpunk"] input[type="search"],
+[data-theme="cyberpunk"] select {
+    background-color: var(--bg-input) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 0px !important;
+}
+
+[data-theme="cyberpunk"] .badge,
+[data-theme="cyberpunk"] .rounded-pill,
+[data-theme="cyberpunk"] .btn-light {
+    background-color: rgba(0, 255, 102, 0.05) !important;
+    color: var(--accent-color) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 0px !important;
+}
+
+[data-theme="cyberpunk"] .card.shadow-sm,
+[data-theme="cyberpunk"] .deck-card {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="cyberpunk"] .col-md-9,
+[data-theme="cyberpunk"] .col-lg-10,
+[data-theme="cyberpunk"] .px-4,
+[data-theme="cyberpunk"] #main-wrapper {
+    background-color: var(--bg-body) !important;
 }

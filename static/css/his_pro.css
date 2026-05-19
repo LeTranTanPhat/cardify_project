@@ -1,0 +1,232 @@
+/* ==========================================================================
+   NHẬT KÝ HỌC TẬP - PREMIUM SYNCED MASTERCLASS
+   ========================================================================== */
+
+/* Khối bao bọc bảng (Card) - Đổ bóng hấp thụ môi trường thực tế (Ambient Stack) */
+.history-card {
+    background: var(--white, #FFFFFF);
+    border: 1px solid var(--border-color, #E2E8F0);
+    border-radius: 24px; 
+    box-shadow: 
+        0 4px 6px -1px rgba(15, 23, 42, 0.02),
+        0 12px 24px -4px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+    /* Tối ưu hiệu năng hiển thị khi danh bạ/nhật ký quá dài */
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px;
+    
+    /* Spring Dynamic Animation */
+    animation: fadeUpSpring 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    opacity: 0;
+}
+
+@keyframes fadeUpSpring {
+    0% { opacity: 0; transform: translateY(24px) scale(0.99); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Bảng dữ liệu - Chuyển sang border-separate bảo vệ bo góc tuyệt đối */
+.modern-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+    font-variant-numeric: tabular-nums; 
+    
+    /* Header bảng: Tinh chỉnh tinh tế hệ Typo */
+    & th {
+        background-color: var(--light-gray, #F8FAFC);
+        color: var(--muted-text, #64748B);
+        font-weight: 750;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 16px 24px;
+        border-bottom: 2px solid var(--border-color, #E2E8F0);
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    /* Thân bảng */
+    & td {
+        padding: clamp(14px, 2vh, 18px) 24px;
+        color: var(--dark-text, #0F172A);
+        border-bottom: 1px solid var(--border-color, #E2E8F0);
+        vertical-align: middle;
+        font-size: 0.92rem;
+        transition: color 0.25s ease;
+    }
+
+    /* Khử border răng cưa dòng cuối cùng */
+    & tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Hoạt ảnh tương tác dòng (Row Interaction) */
+    & tbody tr {
+        transition: background-color 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+        position: relative;
+
+        &:hover {
+            background-color: var(--light-gray, #F8FAFC);
+            
+            /* Chỉ định dải sáng nội dòng mượt mà không làm lệch cấu trúc bảng */
+            & td:first-child {
+                box-shadow: inset 4px 0 0 var(--primary-yellow, #FFC107);
+            }
+
+            /* Trực quan vi mô: Đẩy các thẻ tag và pill phản hồi đồng bộ */
+            & .deck-tag {
+                background: var(--white, #FFFFFF);
+                box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
+                border-color: var(--primary-yellow, #FFC107);
+            }
+
+            & .xp-pill {
+                transform: translateY(-2px) scale(1.03);
+                box-shadow: 0 8px 20px rgba(255, 140, 0, 0.3);
+            }
+        }
+    }
+}
+
+/* --- Thành phần con (Cell Content Elements) --- */
+
+.date-text {
+    font-weight: 750;
+    color: var(--dark-text, #0F172A);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.time-text {
+    font-size: 0.78rem;
+    color: var(--muted-text, #64748B);
+    font-weight: 550;
+}
+
+.deck-tag {
+    background: var(--soft-yellow, #FFFDF0);
+    border: 1px solid rgba(255, 193, 7, 0.25);
+    color: var(--primary-orange, #FF8C00);
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 750;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+}
+
+.accuracy-correct {
+    color: var(--success-green, #10B981);
+    font-weight: 850;
+    font-size: 1.05rem;
+}
+
+.accuracy-slash {
+    color: #94A3B8;
+    margin: 0 4px;
+    font-weight: 400;
+}
+
+.accuracy-total {
+    color: var(--muted-text, #64748B);
+    font-weight: 600;
+}
+
+.xp-pill {
+    background: var(--primary-gradient, linear-gradient(135deg, #FFC107, #FF8C00));
+    color: #0F172A; 
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-weight: 850;
+    font-size: 0.82rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 12px rgba(255, 140, 0, 0.15);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    white-space: nowrap;
+}
+
+/* Tối ưu hóa thiết bị di động (Responsive Fluid Fluid) */
+@media (max-width: 768px) {
+    .history-card {
+        border-radius: 16px;
+    }
+    
+    .modern-table {
+        & th, & td {
+            padding: 14px 16px;
+        }
+        /* Giấu cột thứ 3 (Thường là tỷ lệ chính xác hoặc bộ thẻ phụ) để giải phóng mật độ hiển thị */
+        & th:nth-child(3), 
+        & td:nth-child(3) {
+            display: none;
+        }
+    }
+}
+
+/* ==========================================================================
+   BẢN VÁ CYBERPUNK NATIVE NESTING (Sạch mã - Không lạm dụng !important)
+   ========================================================================== */
+[data-theme="cyberpunk"] {
+    & .history-card {
+        background: var(--bg-card);
+        border-color: var(--border-color);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    }
+
+    & .modern-table {
+        & th {
+            background-color: var(--bg-body);
+            color: var(--text-muted);
+            border-bottom-color: var(--accent-color);
+        }
+
+        & td {
+            color: var(--text-main);
+            border-bottom-color: var(--border-color);
+        }
+
+        & tbody tr:hover {
+            background-color: rgba(0, 255, 65, 0.04);
+            
+            & td:first-child {
+                box-shadow: inset 4px 0 0 var(--accent-color);
+            }
+
+            & .deck-tag {
+                background: rgba(0, 255, 65, 0.1);
+                border-color: var(--accent-color);
+                color: #000000; /* Tương phản tuyệt đối trên nền Neon phát quang */
+                box-shadow: 0 0 12px rgba(0, 255, 65, 0.25);
+            }
+
+            & .xp-pill {
+                box-shadow: 0 0 20px rgba(0, 255, 65, 0.6);
+            }
+        }
+    }
+
+    & .date-text { color: var(--text-main); }
+    & .time-text { color: var(--text-muted); }
+
+    & .deck-tag {
+        background: transparent;
+        border-color: var(--border-color);
+        color: var(--text-main);
+    }
+
+    & .accuracy-correct { color: var(--accent-color); }
+    & .accuracy-slash, 
+    & .accuracy-total { color: var(--text-muted); }
+
+    & .xp-pill {
+        background: var(--primary-gradient);
+        color: #000000;
+        box-shadow: 0 0 12px rgba(0, 255, 65, 0.2);
+    }
+}

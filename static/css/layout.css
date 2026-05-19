@@ -1,68 +1,116 @@
 /* ==========================================================================
-   1. LAYOUT CHÍNH (SIDEBAR & CONTENT AREA)
+   1. LAYOUT CHÍNH (PREMIUM SIDEBAR & CONTENT AREA - NATIVE NESTING)
    ========================================================================== */
    .main-wrapper {
     display: flex;
     min-height: 100vh;
+    background-color: var(--light-gray, #F8FAFC);
+    position: relative;
 }
 
 .sidebar {
-    width: var(--sidebar-width);
-    background-color: var(--white);
-    border-right: 1px solid var(--border-color);
+    width: var(--sidebar-width, 280px);
+    background-color: var(--white, #FFFFFF);
+    /* Thay thế bằng thuộc tính logic bảo vệ đa ngôn ngữ và hướng hiển thị */
+    border-inline-end: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 6px 0 32px rgba(15, 23, 42, 0.015);
     position: fixed;
-    height: 100vh;
-    padding: 2rem 1.5rem;
+    inset-block: 0; /* Khóa cứng cả top và bottom = 0 */
+    left: 0;
+    padding: clamp(1.5rem, 4vh, 2.5rem) 1.5rem; /* Giãn cách thông minh dựa trên chiều cao màn hình */
     display: flex;
     flex-direction: column;
     z-index: 1000;
-}
+    /* Apple Smooth Curve: Tránh hiện tượng giật giật khi mở trên mobile */
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform; /* Ép trình duyệt kích hoạt nhân đồ họa GPU */
 
-.brand-logo {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--dark-text);
-    text-decoration: none;
-    margin-bottom: 3rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+    /* Bắt đầu áp dụng Native CSS Nesting */
+    & .brand-logo {
+        font-family: 'Orbitron', system-ui, sans-serif;
+        font-size: 1.55rem;
+        font-weight: 950; /* Tăng độ dày chữ béo trên màn hình Retina */
+        background: var(--primary-gradient, linear-gradient(135deg, #FFC107 0%, #FF8C00 100%));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-decoration: none;
+        margin-bottom: clamp(2rem, 5vh, 3.5rem);
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        letter-spacing: -0.02em;
+        filter: drop-shadow(0 2px 8px rgba(255, 140, 0, 0.15));
+        transition: filter 0.3s ease;
 
-.nav-menu {
-    list-style: none;
-    padding: 0;
-    flex-grow: 1;
-}
+        &:hover {
+            filter: drop-shadow(0 6px 16px rgba(255, 140, 0, 0.35));
+        }
+    }
 
-.nav-item {
-    margin-bottom: 0.5rem;
-}
+    & .nav-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px; /* Menu gọn gàng thanh lịch */
+    }
 
-.nav-link {
-    display: flex;
-    align-items: center;
-    padding: 0.8rem 1rem;
-    color: var(--dark-text);
-    text-decoration: none;
-    border-radius: 8px;
-    transition: all 0.3s;
-    font-weight: 500;
-}
+    & .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        color: var(--muted-text, #64748B);
+        text-decoration: none;
+        border-radius: 12px;
+        /* KHỬ CHUYỂN ĐỘNG "ALL" - Chỉ định rõ thuộc tính tăng tốc render */
+        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                    background-color 0.25s ease,
+                    color 0.25s ease;
+        font-weight: 600;
+        position: relative;
+        overflow: hidden;
+        outline: none;
 
-.nav-link:hover, .nav-link.active {
-    background-color: var(--soft-yellow);
-    color: #B8860B;
-}
+        &:hover, &:focus-visible {
+            background-color: var(--light-gray, #F8FAFC);
+            color: var(--dark-text, #0F172A);
+            transform: translateX(6px); /* Đẩy nhẹ mượt mà hơn */
+        }
 
-.nav-link i {
-    margin-right: 12px;
-    font-size: 1.2rem;
+        /* Trạng thái Active Cao Cấp */
+        &.active {
+            background: linear-gradient(90deg, rgba(255, 193, 7, 0.08) 0%, rgba(255, 193, 7, 0.01) 100%);
+            color: var(--primary-orange, #FF8C00);
+            font-weight: 750;
+
+            &::before {
+                content: "";
+                position: absolute;
+                left: 0; top: 25%; /* Cực mỏng thu hẹp dải định vị */
+                height: 50%; 
+                width: 3.5px;
+                background-color: var(--primary-yellow, #FFC107);
+                border-radius: 0 4px 4px 0;
+                box-shadow: 2px 0 12px rgba(255, 193, 7, 0.5);
+            }
+        }
+
+        & i {
+            margin-right: 14px;
+            font-size: 1.2rem;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        &:hover i {
+            transform: scale(1.18) rotate(-6deg);
+        }
+    }
 }
 
 .content-area {
-    margin-left: var(--sidebar-width);
+    margin-inline-start: var(--sidebar-width, 280px); /* Tự động tính toán khoảng lề theo hướng trang */
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -70,16 +118,20 @@
 }
 
 /* ==========================================================================
-   2. TOP NAVBAR & USER STATUS
+   2. TOP NAVBAR & USER STATUS (ADVANCED LAYERED GLASSMORPHISM)
    ========================================================================== */
 .top-navbar {
-    height: 70px;
-    background-color: var(--white);
-    border-bottom: 1px solid var(--border-color);
+    height: 76px;
+    background-color: rgba(255, 255, 255, 0.6); /* Hạ bớt alpha để tăng độ mờ kính */
+    /* Cường hóa bộ lọc bão hòa màu mặt nền cuộn phía dưới kính */
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.5); 
+    box-shadow: 0 4px 20px -10px rgba(15, 23, 42, 0.03);
     display: flex;
     align-items: center; 
     justify-content: flex-end; 
-    padding: 0 2rem;
+    padding-inline: clamp(1.5rem, 4vw, 2.5rem);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -88,57 +140,169 @@
 .user-status-wrapper {
     display: flex;
     align-items: center; 
-    gap: 1.2rem;
+    gap: 1.25rem;
 }
 
+/* Thanh năng lượng siêu mượt (Gamification Dynamic) */
 .energy-bar-container {
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: #f8f9fa;
-    padding: 6px 14px;
-    border-radius: 50px;
-    border: 1px solid var(--border-color);
+    gap: 12px;
+    background: var(--white, #FFFFFF);
+    padding: 6px 16px;
+    border-radius: 100px;
+    border: 1px solid var(--border-color, #E2E8F0);
+    box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.01);
+
+    & .energy-progress {
+        width: 120px;
+        height: 7px;
+        background-color: #E2E8F0;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    & .energy-fill {
+        height: 100%;
+        background: var(--primary-gradient, linear-gradient(90deg, #FFC107, #FF8C00));
+        box-shadow: 0 0 12px rgba(255, 140, 0, 0.4);
+        transition: width 0.8s cubic-bezier(0.34, 1.3, 0.64, 1); /* Co bóp đàn hồi nhẹ */
+        position: relative;
+
+        /* Khúc xạ vệt lướt chất lỏng (Liquid Shimmer Glow) */
+        &::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.55) 30%, 
+                rgba(255, 255, 255, 0.1) 60%, 
+                transparent
+            );
+            animation: energyShimmer 3s infinite linear;
+        }
+    }
 }
 
-.energy-progress {
-    width: 100px;
-    height: 10px !important;
-    background-color: #e9ecef;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 0;
+@keyframes energyShimmer {
+    0% { transform: translateX(-110%) skewX(-20deg); }
+    100% { transform: translateX(220%) skewX(-20deg); }
 }
 
-.energy-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary-yellow), var(--primary-orange));
-    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
+/* Huy hiệu chỉ số (Stat Badges) */
 .stat-badge {
-    padding: 6px 14px;
-    border-radius: 50px;
-    font-size: 0.9rem;
-    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 0.88rem;
+    font-weight: 800;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    cursor: default;
+    user-select: none;
+
+    &:hover {
+        transform: translateY(-2.5px);
+        box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.08);
+    }
+
+    &.heart-badge { 
+        color: var(--danger-red, #EF4444); 
+        background: linear-gradient(135deg, #FFFFFF 0%, #FEF2F2 100%); 
+        border: 1px solid rgba(254, 178, 178, 0.45); 
+    }
+
+    &.level-badge { 
+        color: var(--primary-orange, #FF8C00); 
+        background: linear-gradient(135deg, #FFFFFF 0%, #FFFDF0 100%); 
+        border: 1px solid rgba(255, 193, 7, 0.25); 
+    }
 }
 
-.heart-badge { color: var(--danger-red); background: var(--soft-red); border: 1px solid #feb2b2; }
-.level-badge { color: #B8860B; background: var(--soft-yellow); border: 1px solid #faf089; }
-
 /* ==========================================================================  
-   3. RESPONSIVE (MOBILE & TABLET)
+   3. RESPONSIVE & MOBILE OVERLAY PERFORMANCE TRIMMING
    ========================================================================== */
-.menu-toggle { display: none; font-size: 1.5rem; background: none; border: none; }
+.menu-toggle { 
+    display: none; 
+    font-size: 1.4rem; 
+    color: var(--dark-text, #0F172A);
+    background: none; 
+    border: none; 
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    outline: none;
 
+    &:hover, &:focus-visible {
+        background-color: var(--light-gray, #F8FAFC);
+        color: var(--primary-orange, #FF8C00);
+    }
+    &:active {
+        transform: scale(0.94);
+    }
+}
+
+/* Lớp phủ nhung siêu mịn (Velvet Backdrop Overlay) */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.3); /* Slate 900 dịu nhẹ */
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 990;
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+
+    &.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+/* Responsive Breakpoint */
 @media (max-width: 768px) {
-    .menu-toggle { display: block; }
-    .sidebar { transform: translateX(-100%); transition: 0.3s; }
-    .sidebar.active { transform: translateX(0); }
-    .content-area { margin-left: 0; }
-    .top-navbar { justify-content: space-between; padding: 0 1rem; }
-    .energy-bar-container, .username-text { display: none; }
+    .menu-toggle { 
+        display: block; 
+    }
+    
+    .sidebar-overlay { 
+        display: block; 
+    }
+    
+    .sidebar { 
+        transform: translateX(-100%); 
+        box-shadow: 25px 0 60px rgba(15, 23, 42, 0.15); 
+        
+        &.active { 
+            transform: translateX(0); 
+        }
+    }
+    
+    .content-area { 
+        margin-inline-start: 0; 
+    }
+    
+    .top-navbar { 
+        justify-content: space-between; 
+        padding-inline: 1.2rem; 
+    }
+    
+    .energy-bar-container, 
+    .username-text { 
+        display: none; 
+    }
+    
+    .stat-badge {
+        padding: 6px 12px;
+        font-size: 0.82rem;
+    }
 }

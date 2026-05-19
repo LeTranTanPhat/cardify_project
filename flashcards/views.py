@@ -1,408 +1,27 @@
-import csv 
+# -*- coding: utf-8 -*-
+import csv
 import json
+import base64
 import pandas as pd
+import os
+
+# --- Django Imports ---
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse    
 from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse, Http404
 from django.contrib import messages
-from .models import Deck, Profile, Flashcard, DictionaryWord, CardProgress, StudySession
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.models import User
-from django.contrib.auth import update_session_auth_hash
-from django.http import Http404
-import google.generativeai as genai
+from django.core.paginator import Paginator
 
-# === 1. QUẢN LÝ TRANG CHỦ & BỘ THẺ ===
+# --- Local Model Imports ---
+from .models import Deck, Profile, Flashcard, DictionaryWord, CardProgress, StudySession
 
-@login_required(login_url='/login/')
-def dashboard(request):
-    profile, created = Profile.objects.get_or_create(user=request.user)
-    decks = Deck.objects.filter(user=request.user).order_by('-created_at')
-    context = {
-        'decks': decks,
-        'profile': profile
-    }
-    return render(request, 'flashcards/dashboard.html', context)
+# ==========================================
+# 1. AUTHENTICATION & PROFILE VIEWS (GIAO DIỆN)
+# ==========================================
 
-@login_required(login_url='/login/')
-def create_deck(request):
-    if request.method == 'POST':
-        title = request.POST.get('title')
-        description = request.POST.get('description')
-        is_public = request.POST.get('is_public') == 'on' 
-        
-        Deck.objects.create(
-            user=request.user,
-            title=title,
-            description=description,
-            is_public=is_public
-        )
-        messages.success(request, "Đã tạo bộ thẻ mới thành công!")
-        return redirect('dashboard')
-        
-    return render(request, 'flashcards/create_deck.html')
-
-@login_required(login_url='/login/')
-def edit_deck(request, deck_id):
-    deck = get_object_or_404(Deck, id=deck_id, user=request.user)
-    if request.method == 'POST':
-        deck.title = request.POST.get('title')
-        deck.description = request.POST.get('description')
-        deck.is_public = request.POST.get('is_public') == 'on'
-        deck.save()
-        messages.success(request, "Đã cập nhật bộ thẻ.")
-        return redirect('dashboard')
-    return render(request, 'flashcards/edit_deck.html', {'deck': deck})
-
-@login_required(login_url='/login/')
-def delete_deck(request, deck_id):
-    deck = get_object_or_404(Deck, id=deck_id, user=request.user)
-    if request.method == 'POST':
-        deck.delete()
-        messages.info(request, "Đã xóa bộ thẻ.")
-    return redirect('dashboard')
-
-@login_required(login_url='/login/')
-def community_decks(request):
-    # Lấy TẤT CẢ bộ thẻ đang được public, nhưng (tùy chọn) loại trừ các thẻ do chính mình tạo
-    # để tránh hiển thị lại những thẻ đã có ở Dashboard
-    public_decks = Deck.objects.filter(is_public=True).exclude(user=request.user).order_by('-created_at')
-    
-    context = {
-        'public_decks': public_decks
-    }
-    return render(request, 'flashcards/community.html', context)
-
-# === 2. QUẢN LÝ THẺ (FLASHCARDS) ===
-
-@login_required(login_url='/login/')
-def add_card(request, deck_id):
-    deck = get_object_or_404(Deck, id=deck_id, user=request.user)
-    if request.method == 'POST':
-        front = request.POST.get('front_side')
-        back = request.POST.get('back_side')
-        Flashcard.objects.create(deck=deck, front_side=front, back_side=back)
-        return redirect('add_card', deck_id=deck.id)
-        
-    cards = deck.cards.all().order_by('-id')
-    return render(request, 'flashcards/add_card.html', {'deck': deck, 'cards': cards})
-
-# --- CẤU HÌNH AI ---
-# Dán mã API Key đầy đủ của bạn vào đây (mã có trong ảnh Google AI Studio của bạn)
-GEMINI_API_KEY = "AIzaSyDpMPP-Rd40Ykdx8SCS24bImWFLeHYQrEo" 
-genai.configure(api_key=GEMINI_API_KEY)
-
-@csrf_exempt
-def ai_generate_cards(request, deck_id):
-    deck = get_object_or_404(Deck, id=deck_id, user=request.user)
-    
-    if request.method == 'POST':
-        upload_file = request.FILES.get('file')
-        if not upload_file:
-            return JsonResponse({'status': 'error', 'message': 'Không tìm thấy file!'})
-
-        try:
-            # 1. Khởi tạo Model Gemini 1.5 Flash (Nhanh và nhẹ)
-            model = genai.GenerativeModel('gemini-1.5-flash-latest')
-
-            # 2. Đọc nội dung file gửi lên
-            file_data = upload_file.read()
-            file_mime_type = upload_file.content_type
-
-            # 3. Câu lệnh "ép" AI trả về đúng định dạng JSON
-            prompt = """
-            Bạn là một trợ lý giáo dục. Hãy phân tích hình ảnh/tài liệu này và trích xuất các từ vựng hoặc khái niệm quan trọng.
-            YÊU CẦU BẮT BUỘC: Trả về kết quả dưới dạng JSON Array (Mảng).
-            Mỗi phần tử có cấu trúc: {"front": "Từ vựng/Câu hỏi", "back": "Nghĩa/Câu trả lời tiếng Việt"}
-            Chỉ trả về mã JSON, không nói thêm gì khác.
-            """
-
-            # 4. Gửi file lên AI
-            response = model.generate_content([
-                prompt,
-                {'mime_type': file_mime_type, 'data': file_data}
-            ])
-
-            # 5. Xử lý chuỗi JSON từ AI (loại bỏ các ký tự thừa như ```json ...)
-            raw_text = response.text.strip()
-            if "```json" in raw_text:
-                raw_text = raw_text.split("```json")[1].split("```")[0].strip()
-            elif "```" in raw_text:
-                raw_text = raw_text.split("```")[1].split("```")[0].strip()
-
-            data_list = json.loads(raw_text)
-
-            # 6. Lưu hàng loạt vào Database
-            new_cards = []
-            for item in data_list:
-                front = item.get('front', '').strip()
-                back = item.get('back', '').strip()
-                if front and back:
-                    new_cards.append(Flashcard(deck=deck, front_side=front, back_side=back))
-            
-            if new_cards:
-                Flashcard.objects.bulk_create(new_cards)
-                return JsonResponse({
-                    'status': 'success', 
-                    'message': f'Thành công! AI đã tạo {len(new_cards)} thẻ từ ảnh của bạn.'
-                })
-            
-            return JsonResponse({'status': 'error', 'message': 'AI không tìm thấy nội dung phù hợp.'})
-
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': f'Lỗi AI: {str(e)}'})
-
-    return JsonResponse({'status': 'error', 'message': 'Method không hợp lệ'}, status=400)
-
-# ---> ĐÃ THÊM HÀM IMPORT HÀNG LOẠT VÀO ĐÂY <---
-@login_required(login_url='/login/')
-def import_cards_csv(request, deck_id):
-    # Bảo mật: Đảm bảo chỉ user chủ bộ thẻ mới có quyền import
-    deck = get_object_or_404(Deck, id=deck_id, user=request.user)
-    
-    if request.method == 'POST':
-        csv_file = request.FILES.get('file')
-        
-        if not csv_file:
-            messages.error(request, 'Vui lòng chọn một file để tải lên!')
-            return redirect('add_card', deck_id=deck.id)
-            
-        if not csv_file.name.endswith('.csv'):
-            messages.error(request, 'Chỉ hỗ trợ file định dạng .csv!')
-            return redirect('add_card', deck_id=deck.id)
-
-        try:
-            decoded_file = csv_file.read().decode('utf-8-sig').splitlines()
-            reader = csv.reader(decoded_file)
-            
-            new_cards = []
-            for row in reader:
-                if len(row) >= 2:
-                    front = row[0].strip()
-                    back = row[1].strip()
-                    if front and back:
-                        new_cards.append(Flashcard(deck=deck, front_side=front, back_side=back))
-            
-            if new_cards:
-                Flashcard.objects.bulk_create(new_cards)
-                messages.success(request, f'Tuyệt vời! Đã import thành công {len(new_cards)} thẻ mới.')
-            else:
-                messages.warning(request, 'Không tìm thấy dữ liệu hợp lệ trong file (Yêu cầu Cột 1: Mặt trước, Cột 2: Mặt sau).')
-                
-        except Exception as e:
-            messages.error(request, f'Có lỗi xảy ra khi đọc file: {str(e)}')
-            
-    return redirect('add_card', deck_id=deck.id)
-# ------------------------------------------------
-
-@login_required(login_url='/login/')
-def edit_card(request, card_id):
-    card = get_object_or_404(Flashcard, id=card_id, deck__user=request.user)
-    if request.method == 'POST':
-        card.front_side = request.POST.get('front_side')
-        card.back_side = request.POST.get('back_side')
-        card.save()
-        return redirect('add_card', deck_id=card.deck.id)
-    return render(request, 'flashcards/edit_card.html', {'card': card})
-
-@login_required(login_url='/login/')
-def delete_card(request, card_id):
-    card = get_object_or_404(Flashcard, id=card_id, deck__user=request.user)
-    deck_id = card.deck.id
-    if request.method == 'POST':
-        card.delete()
-    return redirect('add_card', deck_id=deck_id)
-
-# === 3. CHẾ ĐỘ HỌC & GAMIFICATION (ARENA/POMODORO) ===
-
-@login_required(login_url='/login/')
-def arena(request, deck_id):
-    # 1. Bỏ điều kiện user=request.user để có thể tìm được cả bộ thẻ của người khác
-    deck = get_object_or_404(Deck, id=deck_id)
-    
-    # 2. Kiểm tra xem user có quyền học bộ thẻ này không
-    # (Nếu không phải chủ bộ thẻ VÀ bộ thẻ đang khóa private thì không cho vào)
-    if deck.user != request.user and not deck.is_public:
-        raise Http404("Bộ thẻ này đang ở chế độ riêng tư hoặc không tồn tại.")
-
-    profile, _ = Profile.objects.get_or_create(user=request.user)
-    
-    if profile.energy < 2:
-        messages.warning(request, "Bạn không đủ năng lượng (cần 2⚡)! Hãy vào Trạm hồi năng lượng để nạp lại.")
-        return redirect('dashboard')
-    
-    cards = deck.cards.all()
-    if not cards:
-        messages.warning(request, "Bộ thẻ này chưa có nội dung để học!")
-        return redirect('dashboard')
-    
-    profile.energy -= 2
-    profile.hearts = 5
-    profile.save()
-    
-    return render(request, 'flashcards/arena.html', {'deck': deck, 'cards': cards, 'profile': profile})
-
-@login_required(login_url='/login/')
-def pomodoro(request):
-    return render(request, 'flashcards/pomodoro.html')
-
-@csrf_exempt  
-@login_required(login_url='/login/')
-def add_heart(request):
-    profile, created = Profile.objects.get_or_create(user=request.user)
-    if profile.energy < 100:
-        profile.energy = min(profile.energy + 20, 100)
-        profile.save()
-    return JsonResponse({'energy': profile.energy, 'status': 'success'})
-
-@csrf_exempt  
-@login_required(login_url='/login/')
-def reduce_heart(request):
-    if request.method == 'POST':
-        profile, created = Profile.objects.get_or_create(user=request.user)
-        if profile.hearts > 0:
-            profile.hearts -= 1
-            profile.save()
-        return JsonResponse({'hearts': profile.hearts, 'status': 'success'})
-    return JsonResponse({'error': 'Yêu cầu không hợp lệ'}, status=400)
-
-# === 4. TỪ ĐIỂN & THƯ VIỆN TỔNG HỢP ===
-
-def dictionary_view(request):
-    return render(request, 'flashcards/dictionary.html')
-
-def all_vocab_view(request):
-    words = DictionaryWord.objects.all().values('language', 'word', 'meaning')
-    formatted_words = []
-    flag_map = {'en': '🇬🇧', 'zh': '🇨🇳', 'ko': '🇰🇷'}
-    name_map = {'en': 'Tiếng Anh', 'zh': 'Tiếng Trung', 'ko': 'Tiếng Hàn'}
-    
-    for w in words:
-        formatted_words.append({
-            'lang': w['language'],
-            'flag': flag_map.get(w['language'], '🌍'),
-            'langName': name_map.get(w['language'], 'Khác'),
-            'word': w['word'],
-            'meaning': w['meaning']
-        })
-    
-    context = {'db_words': json.dumps(formatted_words)}
-    return render(request, 'flashcards/all_vocab.html', context)
-
-def upload_csv_view(request):
-    if request.method == 'POST' and request.FILES.get('csv_file'):
-        uploaded_file = request.FILES['csv_file']
-        file_name = uploaded_file.name.lower()
-        
-        try:
-            if file_name.endswith('.csv'):
-                df = pd.read_csv(uploaded_file)
-            elif file_name.endswith(('.xlsx', '.xls')):
-                df = pd.read_excel(uploaded_file)
-            else:
-                messages.error(request, "Định dạng không hợp lệ! Vui lòng tải lên file .csv, .xlsx hoặc .xls")
-                return redirect('all_vocab')
-
-            df = df.fillna('')
-            words_to_create = []
-            
-            for index, row in df.iterrows():
-                word = str(row.get('Word', '')).strip()
-                meaning = str(row.get('Meaning', '')).strip()
-                language = str(row.get('Language', 'en')).strip()
-                
-                if word and meaning:
-                    words_to_create.append(DictionaryWord(word=word, meaning=meaning, language=language))
-            
-            if words_to_create:
-                DictionaryWord.objects.bulk_create(words_to_create)
-                messages.success(request, f"🎉 Đã tải lên thành công {len(words_to_create)} từ vựng!")
-            else:
-                messages.warning(request, "File không có dữ liệu hoặc sai tên cột (Cần có cột 'Word' và 'Meaning').")
-                
-        except Exception as e:
-            messages.error(request, f"Đã xảy ra lỗi khi đọc file: {str(e)}")
-            
-    return redirect('all_vocab')
-
-def delete_all_vocab(request):
-    if request.method == 'POST':
-        DictionaryWord.objects.all().delete()
-        messages.success(request, "Đã dọn sạch thư viện từ vựng!")
-    return redirect('all_vocab')
-
-# ===============================
-# API ĐĂNG KÝ, ĐĂNG NHẬP, ĐĂNG XUẤT, PROFILE
-# ===============================
-@csrf_exempt
-def api_register(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method không hợp lệ'}, status=400)
-    try:
-        data = json.loads(request.body)
-    except:
-        return JsonResponse({'error': 'JSON không hợp lệ'}, status=400)
-    username = data.get('username')
-    password = data.get('password')
-    if not username or not password:
-        return JsonResponse({'error': 'Thiếu username hoặc password'}, status=400)
-    if User.objects.filter(username=username).exists():
-        return JsonResponse({'error': 'Username đã tồn tại'}, status=400)
-    user = User.objects.create_user(username=username, password=password)
-    Profile.objects.create(user=user)
-    return JsonResponse({'message': 'Đăng ký thành công'}, status=201)
-
-@csrf_exempt
-def api_login(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method không hợp lệ'}, status=400)
-    try:
-        data = json.loads(request.body)
-    except:
-        return JsonResponse({'error': 'JSON không hợp lệ'}, status=400)
-    username = data.get('username')
-    password = data.get('password')
-    user = authenticate(request, username=username, password=password)
-    if user:
-        login(request, user)
-        return JsonResponse({'message': 'Đăng nhập thành công'})
-    else:
-        return JsonResponse({'error': 'Sai tài khoản hoặc mật khẩu'}, status=400)
-
-@login_required
-def api_logout(request):
-    logout(request)
-    return JsonResponse({'message': 'Đăng xuất thành công'})
-
-@login_required
-def api_profile(request):
-    profile = request.user.profile
-    return JsonResponse({
-        'username': request.user.username,
-        'energy': profile.energy,
-        'hearts': profile.hearts,
-        'level': profile.level
-    })
-
-@csrf_exempt
-@login_required
-def api_update_profile(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method không hợp lệ'}, status=400)
-    try:
-        data = json.loads(request.body)
-    except:
-        return JsonResponse({'error': 'JSON không hợp lệ'}, status=400)
-    profile = request.user.profile
-    profile.energy = data.get('energy', profile.energy)
-    profile.hearts = data.get('hearts', profile.hearts)
-    profile.save()
-    return JsonResponse({'message': 'Cập nhật thành công'})
-
-# ===============================
-# GIAO DIỆN AUTH
-# ===============================
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -486,7 +105,432 @@ def change_password(request):
         return redirect('profile')
     return redirect('profile')
 
-# ============ XP & LỊCH SỬ HỌC =================== 
+
+# ==========================================
+# 2. AUTHENTICATION & PROFILE API (AJAX)
+# ==========================================
+
+@csrf_exempt
+def api_register(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method không hợp lệ'}, status=400)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON không hợp lệ'}, status=400)
+        
+    username = data.get('username')
+    password = data.get('password')
+    if not username or not password:
+        return JsonResponse({'error': 'Thiếu username hoặc password'}, status=400)
+    if User.objects.filter(username=username).exists():
+        return JsonResponse({'error': 'Username đã tồn tại'}, status=400)
+        
+    user = User.objects.create_user(username=username, password=password)
+    Profile.objects.create(user=user)
+    return JsonResponse({'message': 'Đăng ký thành công'}, status=201)
+
+@csrf_exempt
+def api_login(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method không hợp lệ'}, status=400)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON không hợp lệ'}, status=400)
+        
+    username = data.get('username')
+    password = data.get('password')
+    user = authenticate(request, username=username, password=password)
+    if user:
+        login(request, user)
+        return JsonResponse({'message': 'Đăng nhập thành công'})
+    else:
+        return JsonResponse({'error': 'Sai tài khoản hoặc mật khẩu'}, status=400)
+
+@login_required
+def api_logout(request):
+    logout(request)
+    return JsonResponse({'message': 'Đăng xuất thành công'})
+
+@login_required
+def api_profile(request):
+    profile = request.user.profile
+    return JsonResponse({
+        'username': request.user.username,
+        'energy': profile.energy,
+        'hearts': profile.hearts,
+        'level': profile.level
+    })
+
+@csrf_exempt
+@login_required
+def api_update_profile(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method không hợp lệ'}, status=400)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON không hợp lệ'}, status=400)
+        
+    profile = request.user.profile
+    profile.energy = data.get('energy', profile.energy)
+    profile.hearts = data.get('hearts', profile.hearts)
+    profile.save()
+    return JsonResponse({'message': 'Cập nhật thành công'})
+
+@login_required
+def edit_profile(request):
+    if request.method == 'POST':
+        # Xử lý lưu dữ liệu người dùng gửi lên tại đây
+        # Ví dụ: request.user.first_name = request.POST.get('first_name')
+        # request.user.save()
+        
+        # Sau khi lưu thành công thì chuyển hướng về trang Profile
+        return redirect('profile') 
+        
+    # Nếu là GET request, hiển thị trang form
+    return render(request, 'auth/edit_profile.html')
+
+
+# ==========================================
+# 3. QUẢN LÝ TRANG CHỦ & BỘ THẺ (DECKS)
+# ==========================================
+
+@login_required(login_url='/login/')
+def dashboard(request):
+    profile, created = Profile.objects.get_or_create(user=request.user)
+    decks = Deck.objects.filter(user=request.user).order_by('-created_at')
+    context = {
+        'decks': decks,
+        'profile': profile
+    }
+    return render(request, 'flashcards/dashboard.html', context)
+
+@login_required(login_url='/login/')
+def create_deck(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        is_public = request.POST.get('is_public') == 'on'
+        
+        Deck.objects.create(
+            user=request.user,
+            title=title,
+            description=description,
+            is_public=is_public
+        )
+        messages.success(request, "Đã tạo bộ thẻ mới thành công!")
+        return redirect('dashboard')
+        
+    return render(request, 'flashcards/create_deck.html')
+
+@login_required(login_url='/login/')
+def edit_deck(request, deck_id):
+    deck = get_object_or_404(Deck, id=deck_id, user=request.user)
+    if request.method == 'POST':
+        deck.title = request.POST.get('title')
+        deck.description = request.POST.get('description')
+        deck.is_public = request.POST.get('is_public') == 'on'
+        deck.save()
+        messages.success(request, "Đã cập nhật bộ thẻ.")
+        return redirect('dashboard')
+    return render(request, 'flashcards/edit_deck.html', {'deck': deck})
+
+@login_required(login_url='/login/')
+def delete_deck(request, deck_id):
+    deck = get_object_or_404(Deck, id=deck_id, user=request.user)
+    if request.method == 'POST':
+        deck.delete()
+        messages.info(request, "Đã xóa bộ thẻ.")
+    return redirect('dashboard')
+
+
+# ==========================================
+# 4. QUẢN LÝ THẺ (FLASHCARDS)
+# ==========================================
+
+@login_required(login_url='/login/')
+def add_card(request, deck_id):
+    deck = get_object_or_404(Deck, id=deck_id, user=request.user)
+    if request.method == 'POST':
+        front = request.POST.get('front_side')
+        back = request.POST.get('back_side')
+        Flashcard.objects.create(deck=deck, front_side=front, back_side=back)
+        return redirect('add_card', deck_id=deck.id)
+        
+    cards = deck.cards.all().order_by('-id')
+    return render(request, 'flashcards/add_card.html', {'deck': deck, 'cards': cards})
+
+@login_required(login_url='/login/')
+def edit_card(request, card_id):
+    card = get_object_or_404(Flashcard, id=card_id, deck__user=request.user)
+    if request.method == 'POST':
+        card.front_side = request.POST.get('front_side')
+        card.back_side = request.POST.get('back_side')
+        card.save()
+        return redirect('add_card', deck_id=card.deck.id)
+    return render(request, 'flashcards/edit_card.html', {'card': card})
+
+@login_required(login_url='/login/')
+def delete_card(request, card_id):
+    card = get_object_or_404(Flashcard, id=card_id, deck__user=request.user)
+    deck_id = card.deck.id
+    if request.method == 'POST':
+        card.delete()
+    return redirect('add_card', deck_id=deck_id)
+
+@login_required(login_url='/login/')
+def import_cards_csv(request, deck_id):
+    deck = get_object_or_404(Deck, id=deck_id, user=request.user)
+    
+    if request.method == 'POST':
+        csv_file = request.FILES.get('file')
+        
+        if not csv_file:
+            messages.error(request, 'Vui lòng chọn một file để tải lên!')
+            return redirect('add_card', deck_id=deck.id)
+            
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, 'Chỉ hỗ trợ file định dạng .csv!')
+            return redirect('add_card', deck_id=deck.id)
+
+        try:
+            decoded_file = csv_file.read().decode('utf-8-sig').splitlines()
+            reader = csv.reader(decoded_file)
+            
+            new_cards = []
+            for row in reader:
+                if len(row) >= 2:
+                    front = row[0].strip()
+                    back = row[1].strip()
+                    if front and back:
+                        new_cards.append(Flashcard(deck=deck, front_side=front, back_side=back))
+            
+            if new_cards:
+                Flashcard.objects.bulk_create(new_cards)
+                messages.success(request, f'Tuyệt vời! Đã import thành công {len(new_cards)} thẻ mới.')
+            else:
+                messages.warning(request, 'Không tìm thấy dữ liệu hợp lệ trong file (Yêu cầu Cột 1: Mặt trước, Cột 2: Mặt sau).')
+                
+        except Exception as e:
+            messages.error(request, f'Có lỗi xảy ra khi đọc file: {str(e)}')
+            
+    return redirect('add_card', deck_id=deck.id)
+
+
+# ==========================================
+# 5. AI STUDIO & AI GENERATION (LUỒNG MỚI CHUẨN UX)
+# ==========================================
+
+@login_required(login_url='/login/')
+def global_ai_studio(request):
+    user_decks = Deck.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'flashcards/ai_studio.html', {'user_decks': user_decks})
+
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def ai_generate_topic_raw(request):
+    """
+    Trả về dữ liệu JSON thẻ (mock) cho UI hiển thị thay vì lưu thẳng vào DB.
+    Hỗ trợ 5 chủ đề: Động vật, Trái cây, Màu sắc, Gia đình, Thời tiết.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            topic = data.get('topic', '').strip().lower()
+            
+            if not topic:
+                return JsonResponse({'status': 'error', 'message': 'Vui lòng nhập chủ đề!'})
+
+            # --- CHỦ ĐỀ 1: ĐỘNG VẬT ---
+            if 'động vật' in topic or 'dong vat' in topic or 'animal' in topic:
+                mock_data = [
+                    {"front": "Dog", "back": "Con Chó (Tiếng Anh)"},
+                    {"front": "狗 (Gǒu)", "back": "Con Chó (Tiếng Trung)"},
+                    {"front": "개 (Gae)", "back": "Con Chó (Tiếng Hàn)"},
+                    {"front": "Cat", "back": "Con Mèo (Tiếng Anh)"},
+                    {"front": "猫 (Māo)", "back": "Con Mèo (Tiếng Trung)"},
+                    {"front": "고양이 (Goyang-i)", "back": "Con Mèo (Tiếng Hàn)"},
+                    {"front": "Lion", "back": "Sư Tử (Tiếng Anh)"},
+                    {"front": "狮子 (Shīzi)", "back": "Sư Tử (Tiếng Trung)"},
+                    {"front": "사자 (Saja)", "back": "Sư Tử (Tiếng Hàn)"}
+                ]
+                return JsonResponse({'status': 'success', 'cards': mock_data})
+
+            # --- CHỦ ĐỀ 2: TRÁI CÂY (MỚI) ---
+            elif 'trái cây' in topic or 'trai cay' in topic or 'hoa quả' in topic or 'fruit' in topic:
+                mock_data = [
+                    {"front": "Apple", "back": "Quả Táo (Tiếng Anh)"},
+                    {"front": "苹果 (Píngguǒ)", "back": "Quả Táo (Tiếng Trung)"},
+                    {"front": "사과 (Sagwa)", "back": "Quả Táo (Tiếng Hàn)"},
+                    {"front": "Banana", "back": "Quả Chuối (Tiếng Anh)"},
+                    {"front": "香蕉 (Xiāngjiāo)", "back": "Quả Chuối (Tiếng Trung)"},
+                    {"front": "바나나 (Banana)", "back": "Quả Chuối (Tiếng Hàn)"},
+                    {"front": "Orange", "back": "Quả Cam (Tiếng Anh)"},
+                    {"front": "橙子 (Chéngzi)", "back": "Quả Cam (Tiếng Trung)"},
+                    {"front": "오렌지 (Orenji)", "back": "Quả Cam (Tiếng Hàn)"}
+                ]
+                return JsonResponse({'status': 'success', 'cards': mock_data})
+
+            # --- CHỦ ĐỀ 3: MÀU SẮC (MỚI) ---
+            elif 'màu sắc' in topic or 'mau sac' in topic or 'color' in topic:
+                mock_data = [
+                    {"front": "Red", "back": "Màu Đỏ (Tiếng Anh)"},
+                    {"front": "红色 (Hóngsè)", "back": "Màu Đỏ (Tiếng Trung)"},
+                    {"front": "빨간색 (Ppalgansaek)", "back": "Màu Đỏ (Tiếng Hàn)"},
+                    {"front": "Blue", "back": "Màu Xanh Dương (Tiếng Anh)"},
+                    {"front": "蓝色 (Lánsè)", "back": "Màu Xanh Dương (Tiếng Trung)"},
+                    {"front": "파란색 (Paransaek)", "back": "Màu Xanh Dương (Tiếng Hàn)"},
+                    {"front": "Green", "back": "Màu Xanh Lá (Tiếng Anh)"},
+                    {"front": "绿色 (Lǜsè)", "back": "Màu Xanh Lá (Tiếng Trung)"},
+                    {"front": "초록색 (Choroksaek)", "back": "Màu Xanh Lá (Tiếng Hàn)"}
+                ]
+                return JsonResponse({'status': 'success', 'cards': mock_data})
+
+            # --- CHỦ ĐỀ 4: GIA ĐÌNH (MỚI) ---
+            elif 'gia đình' in topic or 'gia dinh' in topic or 'family' in topic:
+                mock_data = [
+                    {"front": "Father", "back": "Bố / Cha (Tiếng Anh)"},
+                    {"front": "爸爸 (Bàba)", "back": "Bố / Cha (Tiếng Trung)"},
+                    {"front": "아버지 (Abeoji)", "back": "Bố / Cha (Tiếng Hàn)"},
+                    {"front": "Mother", "back": "Mẹ (Tiếng Anh)"},
+                    {"front": "妈妈 (Māma)", "back": "Mẹ (Tiếng Trung)"},
+                    {"front": "어머니 (Eomeoni)", "back": "Mẹ (Tiếng Hàn)"},
+                    {"front": "Older Brother", "back": "Anh Trai (Tiếng Anh)"},
+                    {"front": "哥哥 (Gēge)", "back": "Anh Trai (Tiếng Trung)"},
+                    {"front": "형 (Hyeong)", "back": "Anh Trai (Tiếng Hàn)"}
+                ]
+                return JsonResponse({'status': 'success', 'cards': mock_data})
+
+            # --- CHỦ ĐỀ 5: THỜI TIẾT (MỚI) ---
+            elif 'thời tiết' in topic or 'thoi tiet' in topic or 'weather' in topic:
+                mock_data = [
+                    {"front": "Sunny", "back": "Trời Nắng (Tiếng Anh)"},
+                    {"front": "晴天 (Qíngtiān)", "back": "Trời Nắng (Tiếng Trung)"},
+                    {"front": "맑음 (Malgeum)", "back": "Trời Nắng (Tiếng Hàn)"},
+                    {"front": "Rainy", "back": "Trời Mưa (Tiếng Anh)"},
+                    {"front": "下雨 (Xiàyǔ)", "back": "Trời Mưa (Tiếng Trung)"},
+                    {"front": "비 (Bi)", "back": "Trời Mưa (Tiếng Hàn)"},
+                    {"front": "Windy", "back": "Có Gió (Tiếng Anh)"},
+                    {"front": "刮风 (Guāfēng)", "back": "Có Gió (Tiếng Trung)"},
+                    {"front": "바람 (Baram)", "back": "Có Gió (Tiếng Hàn)"}
+                ]
+                return JsonResponse({'status': 'success', 'cards': mock_data})
+
+            else:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': 'Bản Demo hiện tại chỉ hỗ trợ các chủ đề: Động vật, Trái cây, Màu sắc, Gia đình, Thời tiết.'
+                })
+                
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f'Lỗi hệ thống: {str(e)}'})
+            
+    return JsonResponse({'status': 'error', 'message': 'Phương thức không hợp lệ'}, status=400)
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def ai_generate_image_raw(request):
+    """
+    Nhận file ảnh và trả về danh sách thẻ (mock) cho UI.
+    """
+    if request.method == 'POST':
+        try:
+            upload_file = request.FILES.get('file')
+            if not upload_file:
+                return JsonResponse({'status': 'error', 'message': 'Không tìm thấy file!'})
+                
+            mock_horse = [
+                {"front": "Horse", "back": "Con Ngựa (Tiếng Anh)"},
+                {"front": "马 (Mǎ)", "back": "Con Ngựa (Tiếng Trung)"},
+                {"front": "말 (Mal)", "back": "Con Ngựa (Tiếng Hàn)"}
+            ]
+            return JsonResponse({'status': 'success', 'cards': mock_horse})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f'Lỗi: {str(e)}'})
+            
+    return JsonResponse({'status': 'error', 'message': 'Phương thức không hợp lệ'}, status=400)
+
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def save_single_card(request):
+    """
+    API để user lưu từng thẻ sau khi đã xem trước và chỉnh sửa trên UI.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            deck_id = data.get('deck_id')
+            front = data.get('front')
+            back = data.get('back')
+            
+            if not deck_id or not front or not back:
+                return JsonResponse({'status': 'error', 'message': 'Dữ liệu không hợp lệ!'})
+
+            deck = get_object_or_404(Deck, id=deck_id, user=request.user)
+            Flashcard.objects.create(deck=deck, front_side=front, back_side=back)
+            
+            return JsonResponse({'status': 'success', 'message': 'Đã lưu thẻ!'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+            
+    return JsonResponse({'status': 'error', 'message': 'Phương thức không hợp lệ'}, status=400)
+
+
+# ==========================================
+# 6. HỌC TẬP & GAMIFICATION (ARENA/POMODORO)
+# ==========================================
+
+@login_required(login_url='/login/')
+def arena(request, deck_id):
+    deck = get_object_or_404(Deck, id=deck_id)
+    
+    if deck.user != request.user and not deck.is_public:
+        raise Http404("Bộ thẻ này đang ở chế độ riêng tư hoặc không tồn tại.")
+
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    
+    if profile.energy < 2:
+        messages.warning(request, "Bạn không đủ năng lượng (cần 2⚡)! Hãy vào Trạm hồi năng lượng để nạp lại.")
+        return redirect('dashboard')
+    
+    cards = deck.cards.all()
+    if not cards:
+        messages.warning(request, "Bộ thẻ này chưa có nội dung để học!")
+        return redirect('dashboard')
+    
+    profile.energy -= 2
+    profile.hearts = 5
+    profile.save()
+    
+    return render(request, 'flashcards/arena.html', {'deck': deck, 'cards': cards, 'profile': profile})
+
+@login_required(login_url='/login/')
+def pomodoro(request):
+    return render(request, 'flashcards/pomodoro.html')
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def add_heart(request):
+    profile, created = Profile.objects.get_or_create(user=request.user)
+    if profile.energy < 100:
+        profile.energy = min(profile.energy + 20, 100)
+        profile.save()
+    return JsonResponse({'energy': profile.energy, 'status': 'success'})
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def reduce_heart(request):
+    if request.method == 'POST':
+        profile, created = Profile.objects.get_or_create(user=request.user)
+        if profile.hearts > 0:
+            profile.hearts -= 1
+            profile.save()
+        return JsonResponse({'hearts': profile.hearts, 'status': 'success'})
+    return JsonResponse({'error': 'Yêu cầu không hợp lệ'}, status=400)
 
 @csrf_exempt
 @login_required
@@ -537,7 +581,6 @@ def record_card_interaction(request):
         card_id = data.get('card_id')
         is_remembered = data.get('is_remembered')
         
-        # Đã fix lỗi đổi Card -> Flashcard
         card = get_object_or_404(Flashcard, id=card_id)
         progress, created = CardProgress.objects.get_or_create(user=request.user, card=card)
         
@@ -557,7 +600,6 @@ def study_history(request):
     sessions = StudySession.objects.filter(user=request.user).order_by('-start_time')
     return render(request, 'flashcards/study_history.html', {'sessions': sessions})
 
-# Hàm quan trọng nhất vừa được thêm để chốt lịch sử:
 @csrf_exempt
 @login_required
 def save_study_session(request):
@@ -582,3 +624,119 @@ def save_study_session(request):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
     return JsonResponse({'status': 'invalid method'})
+
+
+# ==========================================
+# 7. TỪ ĐIỂN & THƯ VIỆN TỔNG HỢP
+# ==========================================
+
+def dictionary_view(request):
+    return render(request, 'flashcards/dictionary.html')
+
+def all_vocab_view(request):
+    words = DictionaryWord.objects.all().values('language', 'word', 'meaning')
+    formatted_words = []
+    flag_map = {'en': '🇬🇧', 'zh': '🇨🇳', 'ko': '🇰🇷'}
+    name_map = {'en': 'Tiếng Anh', 'zh': 'Tiếng Trung', 'ko': 'Tiếng Hàn'}
+    
+    for w in words:
+        formatted_words.append({
+            'lang': w['language'],
+            'flag': flag_map.get(w['language'], '🌍'),
+            'langName': name_map.get(w['language'], 'Khác'),
+            'word': w['word'],
+            'meaning': w['meaning']
+        })
+    
+    context = {'db_words': json.dumps(formatted_words)}
+    return render(request, 'flashcards/all_vocab.html', context)
+
+def upload_csv_view(request):
+    if request.method == 'POST' and request.FILES.get('csv_file'):
+        uploaded_file = request.FILES['csv_file']
+        file_name = uploaded_file.name.lower()
+        
+        try:
+            if file_name.endswith('.csv'):
+                df = pd.read_csv(uploaded_file)
+            elif file_name.endswith(('.xlsx', '.xls')):
+                df = pd.read_excel(uploaded_file)
+            else:
+                messages.error(request, "Định dạng không hợp lệ! Vui lòng tải lên file .csv, .xlsx hoặc .xls")
+                return redirect('all_vocab')
+
+            df = df.fillna('')
+            words_to_create = []
+            
+            for index, row in df.iterrows():
+                word = str(row.get('Word', '')).strip()
+                meaning = str(row.get('Meaning', '')).strip()
+                language = str(row.get('Language', 'en')).strip()
+                
+                if word and meaning:
+                    words_to_create.append(DictionaryWord(word=word, meaning=meaning, language=language))
+            
+            if words_to_create:
+                DictionaryWord.objects.bulk_create(words_to_create)
+                messages.success(request, f"🎉 Đã tải lên thành công {len(words_to_create)} từ vựng!")
+            else:
+                messages.warning(request, "File không có dữ liệu hoặc sai tên cột (Cần có cột 'Word' và 'Meaning').")
+                
+        except Exception as e:
+            messages.error(request, f"Đã xảy ra lỗi khi đọc file: {str(e)}")
+            
+    return redirect('all_vocab')
+
+def delete_all_vocab(request):
+    if request.method == 'POST':
+        DictionaryWord.objects.all().delete()
+        messages.success(request, "Đã dọn sạch thư viện từ vựng!")
+    return redirect('all_vocab')
+
+
+# ==========================================
+# 8. THƯ VIỆN CỘNG ĐỒNG (COMMUNITY)
+# ==========================================
+
+@login_required(login_url='/login/')
+def community_decks(request):
+    return render(request, 'flashcards/community.html')
+
+def api_community_decks(request):
+    query = request.GET.get('q', '').strip()
+    sort_by = request.GET.get('sort', '-created_at')
+    page_number = int(request.GET.get('page', 1))
+
+    decks = Deck.objects.filter(is_public=True)
+    if request.user.is_authenticated:
+        decks = decks.exclude(user=request.user)
+
+    if query:
+        decks = decks.filter(title__icontains=query)
+
+    if sort_by == 'popular':
+        try:
+            decks = decks.order_by('-clone_count')
+        except:
+            decks = decks.order_by('-created_at') 
+    else:
+        decks = decks.order_by('-created_at')
+
+    paginator = Paginator(decks, 12)
+    page_obj = paginator.get_page(page_number)
+
+    data = []
+    for deck in page_obj:
+        data.append({
+            'id': deck.id,
+            'title': deck.title,
+            'description': deck.description,
+            'author': deck.user.username,
+            'card_count': deck.cards.count(),
+        })
+
+    return JsonResponse({
+        'results': data,
+        'has_next': page_obj.has_next(),
+        'current_page': page_obj.number
+    })

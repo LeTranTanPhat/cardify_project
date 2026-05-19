@@ -1,0 +1,654 @@
+/* ==========================================================================
+   AI STUDIO - PREMIUM ULTRA SAAS ARCHITECTURE (2026 EDITION)
+   ========================================================================== */
+
+   :root {
+    /* --- HỆ THỐNG BIẾN SẮC MÀU CAO CẤP (LIGHT MODE) --- */
+    --primary-yellow: #F59E0B;
+    --primary-orange: #EF4444;
+    --brand-gradient: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+    --glare-gradient: linear-gradient(120deg, transparent, rgba(255,255,255,0.6), transparent);
+    
+    /* Thiết lập bề mặt và chữ độ tương phản cao */
+    --dark-text: #0F172A;
+    --muted-text: #64748B;
+    --bg-light: #F8FAFC;
+    --white: #FFFFFF;
+    --surface-glass: rgba(255, 255, 255, 0.8);
+    --border-color: #E2E8F0;
+    --border-focus: #94A3B8;
+    
+    /* Hệ thống bóng đổ 3 tầng sâu (Soft Layered Shadows) */
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.03);
+    --shadow-md: 0 4px 12px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -1px rgba(15, 23, 42, 0.02);
+    --shadow-float: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 10px 10px -6px rgba(15, 23, 42, 0.04);
+    --shadow-glow: 0 0 20px rgba(245, 158, 11, 0.2);
+
+    /* Đường cong vật lý Spring Physics chuẩn Apple UI */
+    --transition-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- HOẠT ẢNH NÂNG CAO --- */
+@keyframes fadeUpSpring {
+    0% { opacity: 0; transform: translateY(24px) scale(0.96); }
+    70% { opacity: 0.9; transform: translateY(-4px) scale(1.01); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes spinDual {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulseGlow {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+/* --- BỐ CỤC CHUNG (Ứng dụng Fluid Spacing) --- */
+.ai-studio-container {
+    max-width: 800px;
+    margin: clamp(20px, 5vw, 50px) auto;
+    padding: 0 clamp(16px, 3vw, 24px);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--dark-text);
+    background-color: transparent;
+}
+
+/* --- HEADER --- */
+.ai-header {
+    text-align: center;
+    margin-bottom: clamp(24px, 4vw, 40px);
+    animation: fadeUpSpring 0.6s var(--transition-spring) forwards;
+}
+
+.ai-header h1 {
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 850;
+    color: var(--dark-text);
+    margin-bottom: 12px;
+    letter-spacing: -0.04em;
+}
+
+.ai-header h1 span {
+    background: var(--brand-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+}
+
+.ai-header p {
+    color: var(--muted-text);
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary-orange);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+    transition: var(--transition-smooth);
+}
+
+.back-link:hover {
+    color: var(--primary-yellow);
+    transform: translateX(-6px);
+}
+
+/* --- TABS NAVIGATION (Giao diện Floating Viên Thuốc) --- */
+.ai-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 32px;
+    background: var(--bg-light);
+    padding: 6px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    width: max-content;
+    margin-inline: auto;
+}
+
+.tab-btn {
+    padding: 10px 24px;
+    border: none;
+    background-color: transparent;
+    color: var(--muted-text);
+    font-size: 0.95rem;
+    font-weight: 700;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: var(--transition-spring);
+}
+
+.tab-btn:hover {
+    color: var(--dark-text);
+    background-color: var(--white);
+    transform: translateY(-1px);
+}
+
+.tab-btn.active {
+    background: var(--white);
+    color: var(--dark-text);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    box-shadow: var(--shadow-md);
+}
+
+/* --- TAB CONTENT AREAS (Hiệu ứng kính chống lóa) --- */
+.tab-content {
+    display: none;
+    background: var(--white);
+    padding: clamp(24px, 4vw, 40px);
+    border-radius: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeUpSpring 0.7s var(--transition-spring) forwards;
+}
+
+/* --- FORM ELEMENTS (Dual-Ring Focus State) --- */
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    color: var(--dark-text);
+    letter-spacing: -0.01em;
+}
+
+.form-control {
+    width: 100%;
+    padding: 14px 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--dark-text);
+    background: var(--white);
+    transition: var(--transition-smooth);
+    box-sizing: border-box;
+}
+
+.form-control::placeholder {
+    color: #A1A1AA;
+}
+
+.form-control:focus {
+    border-color: var(--primary-yellow);
+    box-shadow: 0 0 0 2px var(--white), 0 0 0 5px var(--shadow-glow);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+/* --- DRAG & DROP AREA (Tương tác vật lý phản hồi cao) --- */
+.image-upload-area {
+    border: 2px dashed #CBD5E1;
+    border-radius: 20px;
+    padding: clamp(32px, 6vw, 56px) 20px;
+    text-align: center;
+    background-color: var(--bg-light);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+}
+
+.image-upload-area::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(245, 158, 11, 0.04) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.image-upload-area:hover, .image-upload-area.dragover {
+    border-color: var(--primary-yellow);
+    background-color: var(--white);
+    box-shadow: var(--shadow-float);
+    transform: scale(1.01);
+}
+
+.image-upload-area:hover::before, .image-upload-area.dragover::before {
+    opacity: 1;
+}
+
+.image-upload-area i {
+    font-size: clamp(2.5rem, 5vw, 3.2rem);
+    color: var(--primary-yellow);
+    display: block;
+    margin-bottom: 14px;
+    transition: transform 0.4s var(--transition-spring);
+}
+
+.image-upload-area:hover i {
+    transform: translateY(-6px) scale(1.1);
+}
+
+.image-upload-area input[type="file"] {
+    position: absolute;
+    width: 100%; height: 100%;
+    top: 0; left: 0; opacity: 0;
+    cursor: pointer;
+    z-index: 5;
+}
+
+.image-preview {
+    max-width: 100%;
+    max-height: 260px;
+    border-radius: 16px;
+    display: none;
+    margin: 24px auto 0;
+    box-shadow: var(--shadow-float);
+    position: relative;
+    z-index: 6;
+}
+
+/* --- BUTTON GENERATE (Hiệu ứng Ánh sáng quét qua 3D) --- */
+.btn-generate {
+    width: 100%;
+    padding: 16px 32px;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 16px;
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    color: #B45309;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    transition: var(--transition-spring);
+    position: relative;
+    overflow: hidden;
+    margin-top: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-generate::before {
+    content: "";
+    position: absolute;
+    top: 0; left: -150%;
+    width: 60%; height: 100%;
+    background: var(--glare-gradient);
+    transform: skewX(-25deg);
+    transition: none;
+}
+
+.btn-generate:hover {
+    background: var(--brand-gradient);
+    color: var(--white);
+    border-color: transparent;
+    box-shadow: var(--shadow-float), var(--shadow-glow);
+    transform: translateY(-3px);
+}
+
+.btn-generate:hover::before {
+    left: 200%;
+    transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-generate:disabled {
+    background: #F1F5F9 !important;
+    color: #94A3B8 !important;
+    border-color: var(--border-color) !important;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* --- KẾT QUẢ AI (Micro-interactions Cascading) --- */
+.result-section {
+    margin-top: 48px;
+    display: none; 
+    animation: fadeUpSpring 0.7s var(--transition-spring) forwards;
+}
+
+.result-section h3 {
+    margin-bottom: 24px; 
+    font-weight: 850;
+    color: var(--dark-text);
+    font-size: 1.35rem;
+    letter-spacing: -0.03em;
+}
+
+.generated-card-item {
+    background: var(--white);
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    padding: 24px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    transition: var(--transition-spring);
+    position: relative;
+}
+
+/* Hiệu ứng viền phát quang thông minh khi di chuột qua */
+.generated-card-item:hover, .generated-card-item:focus-within {
+    transform: translateY(-4px) scale(1.005);
+    box-shadow: var(--shadow-float);
+    border-color: var(--primary-yellow);
+}
+
+.card-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.generated-card-item .form-control {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    border-radius: 12px;
+}
+
+.card-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-color);
+}
+
+.card-actions select {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-light);
+    color: var(--dark-text);
+    font-size: 0.95rem;
+    font-weight: 600;
+    outline: none;
+    transition: var(--transition-smooth);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 14px;
+    padding-right: 40px;
+}
+
+.card-actions select:focus {
+    border-color: var(--primary-yellow);
+    background-color: var(--white);
+    box-shadow: 0 0 0 3px var(--shadow-glow);
+}
+
+.btn-save-card {
+    background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%);
+    color: #15803D;
+    border: 1px solid rgba(21, 128, 61, 0.15);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition-spring);
+}
+
+.btn-save-card:hover {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: var(--white);
+    border-color: transparent;
+    box-shadow: 0 8px 16px rgba(16, 185, 129, 0.25);
+    transform: translateY(-2px);
+}
+
+.btn-save-card:disabled {
+    background: #F1F5F9 !important;
+    color: #94A3B8 !important;
+    border-color: var(--border-color) !important;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.status-msg {
+    font-size: 0.95rem;
+    font-weight: 750;
+    color: #10B981;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    animation: fadeUpSpring 0.4s var(--transition-spring);
+}
+
+/* --- LOADING OVERLAY (Hiệu ứng Kính Frosted Glass cao cấp) --- */
+#loading-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Spinner Quỹ đạo kép (Concentric Orbit Spinner) */
+.spinner {
+    width: 54px;
+    height: 54px;
+    border: 4px solid #E2E8F0;
+    border-top: 4px solid var(--primary-yellow);
+    border-right: 4px solid var(--primary-orange);
+    border-radius: 50%;
+    animation: spinDual 0.8s cubic-bezier(0.6, 0.2, 0.2, 0.8) infinite;
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.spinner::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border: 2px dashed rgba(239, 68, 68, 0.3);
+    border-radius: 50%;
+    animation: spinDual 4s linear infinite reverse;
+}
+
+.loading-text {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--dark-text);
+    letter-spacing: -0.02em;
+    background: var(--brand-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* --- PHẢN HỒI RESPONSIVE --- */
+@media (max-width: 768px) {
+    .card-inputs {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .card-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .card-actions select, .btn-save-card {
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .ai-tabs { width: 100%; box-sizing: border-box; }
+    .tab-btn { flex: 1; text-align: center; padding: 10px 12px; font-size: 0.85rem; }
+    .tab-content { padding: 20px; border-radius: 20px; }
+}
+
+
+/* ==========================================================================
+   BẢN VÁ CYBERPUNK 2.0 - SCI-FI DARK MODE GLITCH & GLOW (SIÊU CẤP)
+   ========================================================================== */
+[data-theme="cyberpunk"] {
+    --cyber-neon-green: #00FF66;
+    --cyber-neon-cyan: #00F0FF;
+    --cyber-neon-magenta: #FF0055;
+    --cyber-black: #05050A;
+    --cyber-card-bg: #0D0E15;
+    --cyber-border: rgba(0, 255, 102, 0.25);
+    --cyber-grid: linear-gradient(rgba(0, 255, 65, 0.02) 1px, transparent 1px),
+                   linear-gradient(90deg, rgba(0, 255, 65, 0.02) 1px, transparent 1px);
+}
+
+[data-theme="cyberpunk"] .ai-studio-container {
+    background-image: var(--cyber-grid);
+    background-size: 20px 20px;
+}
+
+[data-theme="cyberpunk"] .ai-header h1,
+[data-theme="cyberpunk"] .form-group label,
+[data-theme="cyberpunk"] .result-section h3 {
+    color: #FFFFFF !important;
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+[data-theme="cyberpunk"] .ai-header h1 span {
+    background: linear-gradient(90deg, var(--cyber-neon-cyan), var(--cyber-neon-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+[data-theme="cyberpunk"] .ai-header p {
+    color: #8A99AD !important;
+}
+
+/* Tabs Cyberpunk dạng khối cơ khí */
+[data-theme="cyberpunk"] .ai-tabs {
+    background: #121420 !important;
+    border-color: var(--cyber-border) !important;
+    border-radius: 0px;
+}
+
+[data-theme="cyberpunk"] .tab-btn {
+    border-radius: 0px;
+    color: #64748B !important;
+}
+
+[data-theme="cyberpunk"] .tab-btn.active {
+    background: var(--cyber-neon-green) !important;
+    color: var(--cyber-black) !important;
+    font-weight: 900;
+    box-shadow: 0 0 15px var(--cyber-neon-green) !important;
+}
+
+/* Khối nội dung dạng lõi công nghệ */
+[data-theme="cyberpunk"] .tab-content,
+[data-theme="cyberpunk"] .generated-card-item {
+    background: var(--cyber-card-bg) !important;
+    border: 1px solid var(--cyber-border) !important;
+    border-radius: 0px !important; /* Không bo tròn góc theo chuẩn Cyberpunk */
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%); /* Cắt vát góc kĩ thuật số */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8) !important;
+}
+
+[data-theme="cyberpunk"] .generated-card-item:hover {
+    border-color: var(--cyber-neon-cyan) !important;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.2) !important;
+}
+
+/* Trường nhập liệu ma trận console */
+[data-theme="cyberpunk"] .form-control,
+[data-theme="cyberpunk"] .card-actions select {
+    background: #05060B !important;
+    border: 1px solid rgba(0, 240, 255, 0.3) !important;
+    color: var(--cyber-neon-cyan) !important;
+    font-family: 'Courier New', Courier, monospace;
+    border-radius: 0px !important;
+}
+
+[data-theme="cyberpunk"] .form-control:focus,
+[data-theme="cyberpunk"] .card-actions select:focus {
+    border-color: var(--cyber-neon-cyan) !important;
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.4) !important;
+}
+
+/* Phân khu Drag & Drop bức xạ */
+[data-theme="cyberpunk"] .image-upload-area {
+    background: #05060B !important;
+    border: 2px dashed var(--cyber-border) !important;
+    border-radius: 0px !important;
+}
+
+[data-theme="cyberpunk"] .image-upload-area i {
+    color: var(--cyber-neon-green) !important;
+    text-shadow: 0 0 10px var(--cyber-neon-green);
+}
+
+/* Nút bấm Kích hoạt Hệ thống hạt nhân */
+[data-theme="cyberpunk"] .btn-generate {
+    background: transparent !important;
+    color: var(--cyber-neon-green) !important;
+    border: 1px solid var(--cyber-neon-green) !important;
+    border-radius: 0px !important;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+[data-theme="cyberpunk"] .btn-generate:hover {
+    background: var(--cyber-neon-green) !important;
+    color: var(--cyber-black) !important;
+    box-shadow: 0 0 25px var(--cyber-neon-green) !important;
+}
+
+[data-theme="cyberpunk"] .btn-save-card {
+    background: transparent !important;
+    color: var(--cyber-neon-cyan) !important;
+    border: 1px solid var(--cyber-neon-cyan) !important;
+    border-radius: 0px !important;
+}
+
+[data-theme="cyberpunk"] .btn-save-card:hover {
+    background: var(--cyber-neon-cyan) !important;
+    color: var(--cyber-black) !important;
+    box-shadow: 0 0 20px var(--cyber-neon-cyan) !important;
+}
+
+/* Màn hình nạp dữ liệu sâu phòng thí nghiệm */
+[data-theme="cyberpunk"] #loading-overlay {
+    background: rgba(5, 5, 10, 0.9) !important;
+}
+
+[data-theme="cyberpunk"] .spinner {
+    border: 4px solid #121420 !important;
+    border-top: 4px solid var(--cyber-neon-magenta) !important;
+    border-right: 4px solid var(--cyber-neon-cyan) !important;
+}
+
+[data-theme="cyberpunk"] .spinner::after {
+    border: 2px dashed rgba(0, 255, 102, 0.5) !important;
+}
+
+[data-theme="cyberpunk"] .loading-text {
+    background: linear-gradient(90deg, var(--cyber-neon-magenta), var(--cyber-neon-cyan)) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    font-family: 'Courier New', Courier, monospace;
+}

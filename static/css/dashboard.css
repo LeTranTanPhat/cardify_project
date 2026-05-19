@@ -1,0 +1,218 @@
+/* ==========================================================================
+   TÊN FILE: dashboard.css
+   MÔ TẢ: Hệ thống UI Giao diện trang chủ đồng bộ màu Cam-Vàng Thương hiệu
+   ========================================================================== */
+
+   :root {
+    --primary-yellow: #FFC107;
+    --primary-orange: #FF8C00;
+    --dark-text: #0F172A;
+    --muted-text: #64748B;
+    --white: #FFFFFF;
+    --bg-light: #F8FAFC;
+    --border-color: #E2E8F0;
+    
+    --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.03);
+    --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.05), 0 10px 10px -5px rgba(15, 23, 42, 0.02);
+    
+    --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
+    --ease-smooth: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* --- DASHBOARD HEADER --- */
+.dashboard-header h1 {
+    color: var(--dark-text);
+    letter-spacing: -0.5px;
+}
+
+/* --- CREATE DECK CARD (Nút thêm bộ thẻ nét đứt) --- */
+.create-deck-card {
+    border: 2px dashed #CBD5E1 !important;
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 24px !important;
+    transition: all 0.4s var(--ease-spring) !important;
+    min-height: 250px;
+}
+.create-deck-card:hover {
+    transform: translateY(-6px);
+    background: var(--white) !important;
+    border-color: var(--primary-orange) !important;
+    box-shadow: var(--shadow-lg), 0 0 15px rgba(255, 140, 0, 0.15);
+}
+.create-deck-card i {
+    background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-orange) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 6px rgba(255, 140, 0, 0.2));
+    transition: transform 0.4s var(--ease-spring);
+}
+.create-deck-card:hover i {
+    transform: scale(1.15) rotate(90deg);
+}
+.create-deck-text {
+    font-weight: 700;
+    color: var(--dark-text);
+}
+
+/* --- DECK CARD (Premium Glassmorphism) --- */
+.deck-card {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border-radius: 24px !important;
+    border: 1px solid rgba(226, 232, 240, 0.6) !important;
+    box-shadow: var(--shadow-md), 0 0 0 1px rgba(255, 255, 255, 0.9) inset !important;
+    transition: transform 0.4s var(--ease-smooth), box-shadow 0.4s var(--ease-smooth) !important;
+}
+.deck-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(255, 255, 255, 1) inset !important;
+}
+
+/* Ép icon bộ bài sang màu cam gradient thương hiệu */
+.deck-card .ph-cards {
+    background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-orange) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: var(--primary-orange) !important;
+    display: inline-block;
+}
+
+/* --- BUTTONS & INTERACTION --- */
+.btn-deck-learn {
+    background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-orange) 100%) !important;
+    border: none !important;
+    color: #1E293B !important;
+    padding: 12px 20px !important;
+    border-radius: 14px !important;
+    font-weight: 800 !important;
+    transition: all 0.4s var(--ease-spring) !important;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    box-shadow: 0 4px 12px rgba(255, 140, 0, 0.2) !important;
+}
+.btn-deck-learn::before {
+    content: "";
+    position: absolute;
+    top: 0; left: -100%;
+    width: 50%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.6), transparent);
+    transition: all 0.6s ease;
+    z-index: -1;
+}
+.btn-deck-learn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 15px rgba(255, 140, 0, 0.3) !important;
+}
+.btn-deck-learn:hover::before {
+    left: 200%;
+    transition: all 0.8s ease-in-out;
+}
+.btn-deck-manage {
+    background: transparent !important;
+    border: 2px solid var(--border-color) !important;
+    color: var(--muted-text) !important;
+    border-radius: 14px !important;
+    transition: all 0.3s var(--ease-smooth) !important;
+}
+.btn-deck-manage:hover {
+    background: #F1F5F9 !important;
+    color: var(--dark-text) !important;
+    border-color: #CBD5E1 !important;
+}
+
+/* --- DROPDOWN CUSTOMIZATION --- */
+.custom-dropdown-menu {
+    border-radius: 16px !important;
+    padding: 8px !important;
+    box-shadow: var(--shadow-lg) !important;
+    border: 1px solid var(--border-color) !important;
+}
+.custom-dropdown-item {
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+.custom-dropdown-item:hover {
+    background-color: var(--bg-light) !important;
+}
+
+/* --- EMPTY STATE BOX --- */
+.empty-state-box {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border-radius: 28px !important;
+    box-shadow: var(--shadow-md) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* ==========================================================================
+   BẢN VÁ THEME TỐI (CYBERPUNK MODE) ĐỒNG BỘ CHO TRANG CHỦ
+   ========================================================================== */
+[data-theme="cyberpunk"] .dashboard-header h1,
+[data-theme="cyberpunk"] .card-title,
+[data-theme="cyberpunk"] .create-deck-text {
+    color: var(--text-main) !important;
+}
+[data-theme="cyberpunk"] .deck-card {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+}
+[data-theme="cyberpunk"] .deck-card:hover {
+    box-shadow: 0 10px 30px rgba(0, 255, 65, 0.1) !important;
+}
+[data-theme="cyberpunk"] .create-deck-card {
+    background: rgba(0, 255, 65, 0.02) !important;
+    border-color: rgba(0, 255, 65, 0.3) !important;
+}
+[data-theme="cyberpunk"] .create-deck-card:hover {
+    background: rgba(0, 255, 65, 0.08) !important;
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.2) !important;
+}
+[data-theme="cyberpunk"] .create-deck-card i,
+[data-theme="cyberpunk"] .deck-card .ph-cards {
+    background: none !important;
+    -webkit-text-fill-color: var(--accent-color) !important;
+    color: var(--accent-color) !important;
+    filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.4)) !important;
+}
+[data-theme="cyberpunk"] .btn-deck-learn {
+    background: transparent !important;
+    color: var(--accent-color) !important;
+    border: 1px solid var(--accent-color) !important;
+    box-shadow: none !important;
+}
+[data-theme="cyberpunk"] .btn-deck-learn:hover {
+    background: var(--primary-gradient) !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.3) !important;
+}
+[data-theme="cyberpunk"] .btn-deck-manage {
+    border-color: var(--border-color) !important;
+    color: var(--text-muted) !important;
+}
+[data-theme="cyberpunk"] .btn-deck-manage:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: var(--text-main) !important;
+}
+[data-theme="cyberpunk"] .custom-dropdown-menu {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+[data-theme="cyberpunk"] .custom-dropdown-item {
+    color: var(--text-main) !important;
+}
+[data-theme="cyberpunk"] .custom-dropdown-item:hover {
+    background-color: rgba(0, 255, 65, 0.1) !important;
+    color: var(--accent-color) !important;
+}
+[data-theme="cyberpunk"] .empty-state-box {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}

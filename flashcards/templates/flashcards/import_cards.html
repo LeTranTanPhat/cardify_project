@@ -1,0 +1,137 @@
+{% extends 'flashcards/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-5">
+                        <div class="icon-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 2rem;">
+                            <i class="ph-bold ph-file-csv"></i>
+                        </div>
+                        <h2 class="fw-bold">Nhập thẻ từ file CSV</h2>
+                        <p class="text-muted">Tải file .csv của bạn lên để thêm hàng loạt thẻ vào bộ: <strong>{{ deck.title }}</strong></p>
+                    </div>
+
+                    <div id="dropzone" class="border-2 border-dashed rounded-4 p-5 text-center mb-4" style="border-color: #cbd5e1; background-color: #f8fafc; cursor: pointer; transition: all 0.3s;">
+                        <input type="file" id="fileInput" accept=".csv" class="d-none">
+                        <i class="ph-bold ph-cloud-arrow-up text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="fw-semibold">Click để chọn file hoặc kéo thả vào đây</h5>
+                        <p class="text-muted small">Chỉ chấp nhận file .csv (Cột 1: Mặt trước, Cột 2: Mặt sau)</p>
+                    </div>
+
+                    <div id="previewArea" style="display: none;">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="fw-bold m-0"><i class="ph-bold ph-eye me-2"></i> Xem trước dữ liệu (<span id="rowCount">0</span> thẻ)</h5>
+                            <button id="resetBtn" class="btn btn-sm btn-outline-danger">Chọn lại file</button>
+                        </div>
+                        
+                        <div class="table-responsive rounded-3 border mb-4" style="max-height: 400px;">
+                            <table class="table table-hover mb-0" id="previewTable">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>Mặt trước (Câu hỏi)</th>
+                                        <th>Mặt sau (Câu trả lời)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    </tbody>
+                            </table>
+                        </div>
+
+                        <form method="POST" id="importForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="csv_data" id="csvDataInput">
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg fw-bold rounded-3">
+                                    <i class="ph-bold ph-check-circle me-2"></i> Xác nhận Import ngay
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const previewArea = document.getElementById('previewArea');
+    const previewTableBody = document.querySelector('#previewTable tbody');
+    const rowCountSpan = document.getElementById('rowCount');
+    const csvDataInput = document.getElementById('csvDataInput');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // Click vào dropzone để mở file dialog
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    // Xử lý khi chọn file
+    fileInput.addEventListener('change', function(e) {
+        if (this.files.length > 0) handleFile(this.files[0]);
+    });
+
+    // Reset
+    resetBtn.addEventListener('click', () => location.reload());
+
+    function handleFile(file) {
+        Papa.parse(file, {
+            header: false,
+            skipEmptyLines: true,
+            complete: function(results) {
+                const data = results.data;
+                renderPreview(data);
+            }
+        });
+    }
+
+    function renderPreview(data) {
+        previewTableBody.innerHTML = '';
+        let validData = [];
+
+        data.forEach((row, index) => {
+            if (row.length >= 2) {
+                validData.push({front: row[0], back: row[1]});
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="text-muted">${index + 1}</td>
+                    <td class="fw-medium">${row[0]}</td>
+                    <td class="text-primary">${row[1]}</td>
+                `;
+                previewTableBody.appendChild(tr);
+            }
+        });
+
+        if (validData.length > 0) {
+            rowCountSpan.innerText = validData.length;
+            csvDataInput.value = JSON.stringify(validData);
+            dropzone.classList.add('d-none');
+            previewArea.style.display = 'block';
+        } else {
+            alert('File CSV không đúng định dạng hoặc không có dữ liệu!');
+        }
+    }
+
+    // Hiệu ứng kéo thả
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, e => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+
+    dropzone.addEventListener('dragover', () => dropzone.style.backgroundColor = '#eff6ff');
+    dropzone.addEventListener('dragleave', () => dropzone.style.backgroundColor = '#f8fafc');
+    dropzone.addEventListener('drop', (e) => {
+        const file = e.dataTransfer.files[0];
+        handleFile(file);
+    });
+});
+</script>
+{% endblock %}

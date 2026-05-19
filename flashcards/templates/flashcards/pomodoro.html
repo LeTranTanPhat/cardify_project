@@ -1,7 +1,12 @@
 {% extends 'flashcards/base.html' %}
+{% load static %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'css/pomodoro.css' %}">
+
 <div class="container text-center mt-5" data-aos="zoom-in">
+
+    <!-- Header -->
     <div class="mb-4">
         <h2 class="fw-bold display-6 mb-2">
             <i class="ph-fill ph-lightning text-warning"></i> TRẠM HỒI NĂNG LƯỢNG
@@ -9,63 +14,162 @@
         <p class="text-muted fs-5">Tập trung làm việc để nạp lại <span class="fw-bold text-warning">+20 ⚡</span></p>
     </div>
 
-    <div class="timer-circle mb-5" id="timer-display">
-        <div class="timer-text" id="time">25:00</div>
+    <div class="pom-wrap">
+
+        <!-- Ring Timer -->
+        <div class="pom-ring-wrap">
+            <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+                <circle class="pom-ring-bg" cx="120" cy="120" r="108"/>
+                <circle class="pom-ring-fg" id="ring-fg" cx="120" cy="120" r="108"
+                    stroke-dasharray="678.58"
+                    stroke-dashoffset="0"/>
+            </svg>
+            <div class="pom-ring-center">
+                <div class="pom-time-text" id="time">25:00</div>
+                <div class="pom-mode-badge">TẬP TRUNG</div>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div id="status-area">
+            <h4 class="fw-bold text-muted mb-0" id="status-text">Sẵn sàng nạp điện?</h4>
+        </div>
+
+        <!-- Buttons -->
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <button id="start-btn" class="btn btn-yellow btn-timer rounded-pill fw-bold shadow" onclick="handleStart()">
+                <i class="ph ph-play me-1"></i> BẮT ĐẦU NẠP
+            </button>
+            <button id="cancel-btn" class="btn btn-outline-danger btn-timer rounded-pill fw-bold" onclick="confirmReset()" style="display: none;">
+                <i class="ph ph-stop me-1"></i> DỪNG LẠI
+            </button>
+            <button class="btn btn-outline-secondary rounded-pill fw-bold px-3" onclick="openSettings()" title="Cài đặt">
+                <i class="ph ph-gear"></i>
+            </button>
+        </div>
+
     </div>
 
-    <div id="status-area" class="mb-4">
-        <h4 class="fw-bold text-muted" id="status-text">Sẵn sàng nạp điện?</h4>
-    </div>
-
-    <div class="d-flex justify-content-center gap-3">
-        <button id="start-btn" class="btn btn-yellow btn-timer rounded-pill fw-bold shadow" onclick="startTimer()">
-            BẮT ĐẦU NẠP
-        </button>
-        <button id="cancel-btn" class="btn btn-outline-danger btn-timer rounded-pill fw-bold" onclick="confirmReset()" style="display: none;">
-            DỪNG LẠI
-        </button>
-    </div>
-
-    <div class="mt-5 p-4 rounded-4 shadow-sm mx-auto pomodoro-tips">
+    <!-- Tip -->
+    <div class="mt-4 p-4 rounded-4 shadow-sm mx-auto pomodoro-tips">
         <p class="mb-0 text-muted">
             <i class="ph ph-lightbulb me-2"></i> <strong>Mẹo:</strong> Hãy để điện thoại sang một bên và tập trung hoàn toàn để năng lượng được nạp hiệu quả nhất!
         </p>
     </div>
+
+</div>
+
+<!-- Settings Modal -->
+<div class="pom-modal-overlay" id="settings-modal">
+    <div class="pom-modal-box">
+        <div class="pom-modal-header">
+            <div class="pom-modal-title">
+                <i class="ph ph-gear text-warning"></i> Cài đặt Pomodoro
+            </div>
+            <button class="pom-modal-close" onclick="closeSettings()">✕</button>
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <div class="setting-label"><i class="ph ph-clock text-warning"></i> Thời gian tập trung</div>
+                <div class="setting-sub">Phút mỗi phiên học</div>
+            </div>
+            <input class="setting-input" type="number" id="input-study" min="1" max="60" value="25">
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <div class="setting-label"><i class="ph ph-bell text-warning"></i> Âm thanh thông báo</div>
+                <div class="setting-sub">Phát nhạc khi kết thúc phiên</div>
+            </div>
+            <label class="toggle-wrap">
+                <input type="checkbox" id="toggle-sound" checked>
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+            </label>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-3">
+            <button class="btn btn-outline-secondary rounded-pill px-4" onclick="closeSettings()">Hủy</button>
+            <button class="btn btn-yellow rounded-pill fw-bold px-4" onclick="saveSettings()">
+                <i class="ph ph-check me-1"></i> Lưu
+            </button>
+        </div>
+    </div>
 </div>
 
 <script>
-    const STUDY_TIME = 1;
-    let timeLeft = STUDY_TIME * 60;
-    let timer;
-    let isRunning = false;
-    
-    function updateDisplay() {
-        let mins = Math.floor(timeLeft / 60);
-        let secs = timeLeft % 60;
-        document.getElementById('time').innerText = 
-            `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+    const CIRCUMFERENCE = 678.58;
+
+    let settings = { study: 25, sound: true };
+    let state = {
+        timeLeft: 25 * 60,
+        total: 25 * 60,
+        running: false,
+        interval: null
+    };
+    let audioCtx = null;
+
+    function getAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        return audioCtx;
     }
 
-    function startTimer() {
-        if (isRunning) return;
-        isRunning = true;
+    function playDone() {
+        if (!settings.sound) return;
+        try {
+            const ctx = getAudio();
+            [523, 659, 784].forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.frequency.value = freq;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.18);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.18 + 0.5);
+                osc.start(ctx.currentTime + i * 0.18);
+                osc.stop(ctx.currentTime + i * 0.18 + 0.5);
+            });
+        } catch(e) {}
+    }
 
-        document.getElementById('timer-display').classList.add('running');
-        document.getElementById('status-text').innerHTML = 'Đang nạp năng lượng... <span class="spinner-grow spinner-grow-sm text-warning"></span>';
+    function fmt(s) {
+        return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+    }
+
+    function updateRing() {
+        const pct = state.timeLeft / state.total;
+        document.getElementById('ring-fg').style.strokeDashoffset = CIRCUMFERENCE * (1 - pct);
+        document.getElementById('ring-fg').style.stroke = pct < 0.25 ? '#dc3545' : '#FFD700';
+    }
+
+    function updateUI() {
+        document.getElementById('time').innerText = fmt(state.timeLeft);
+        updateRing();
+    }
+
+    function handleStart() {
+        if (state.running) return;
+        try { getAudio().resume(); } catch(e) {}
+        state.running = true;
         document.getElementById('start-btn').style.display = 'none';
-        document.getElementById('cancel-btn').style.display = 'block';
+        document.getElementById('cancel-btn').style.display = 'inline-block';
+        document.getElementById('status-text').innerHTML =
+            'Đang nạp năng lượng... <span class="spinner-grow spinner-grow-sm text-warning"></span>';
 
-        timer = setInterval(() => {
-            timeLeft--;
-            updateDisplay();
-            if (timeLeft <= 0) {
-                clearInterval(timer);
+        state.interval = setInterval(() => {
+            state.timeLeft--;
+            updateUI();
+            if (state.timeLeft <= 0) {
+                clearInterval(state.interval);
                 completePomodoro();
             }
         }, 1000);
     }
 
     function completePomodoro() {
+        state.running = false;
+        playDone();
         Swal.fire({
             title: 'NẠP ĐIỆN THÀNH CÔNG!',
             text: 'Bạn đã nhận được +20 Năng lượng (⚡)',
@@ -88,12 +192,49 @@
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Dừng nạp',
-            cancelButtonText: 'Tiếp tục'
+            cancelButtonText: 'Tiếp tục',
+            confirmButtonColor: '#dc3545'
         }).then((result) => {
-            if (result.isConfirmed) location.reload();
+            if (result.isConfirmed) {
+                clearInterval(state.interval);
+                state.running = false;
+                state.timeLeft = settings.study * 60;
+                state.total = settings.study * 60;
+                document.getElementById('start-btn').style.display = 'inline-block';
+                document.getElementById('cancel-btn').style.display = 'none';
+                document.getElementById('status-text').textContent = 'Sẵn sàng nạp điện?';
+                updateUI();
+            }
         });
     }
 
-    updateDisplay();
+    function openSettings() {
+        document.getElementById('input-study').value = settings.study;
+        document.getElementById('toggle-sound').checked = settings.sound;
+        document.getElementById('settings-modal').classList.add('open');
+    }
+
+    function closeSettings() {
+        document.getElementById('settings-modal').classList.remove('open');
+    }
+
+    function saveSettings() {
+        const s = parseInt(document.getElementById('input-study').value) || 25;
+        settings.study = Math.min(Math.max(s, 1), 60);
+        settings.sound = document.getElementById('toggle-sound').checked;
+        if (!state.running) {
+            state.timeLeft = settings.study * 60;
+            state.total = settings.study * 60;
+            updateUI();
+        }
+        closeSettings();
+    }
+
+    document.getElementById('settings-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeSettings();
+    });
+
+    updateUI();
 </script>
+
 {% endblock %}

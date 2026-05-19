@@ -1,247 +1,286 @@
 /* ==========================================================================
-   15. AUTHENTICATION (LOGIN & REGISTER PAGES) - REDESIGNED
+   VARIABLES - ĐỒNG BỘ MÀU HỆ THỐNG CHUẨN PREMIUM SAAS (ULTIMATE UPGRADE)
    ========================================================================== */
-   .auth-wrapper {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #F8FAFC; /* Nền sáng, sạch sẽ hơn */
-    /* Gradient ánh sáng mềm mại và hiện đại hơn */
-    background-image: 
-        radial-gradient(circle at 15% 50%, rgba(255, 215, 0, 0.08), transparent 25%),
-        radial-gradient(circle at 85% 30%, rgba(108, 92, 231, 0.05), transparent 25%);
-    padding: 20px;
+   :root {
+    /* Brand Colors - Tinh chỉnh dải màu hổ phách & hổ phách mật ong sang trọng */
+    --brand-accent: #F59E0B;
+    --brand-accent-soft: #FEF3C7; 
+    --brand-accent-glow: rgba(245, 158, 11, 0.15); 
+    --surface-white: #FFFFFF;
+    --surface-glass: rgba(255, 255, 255, 0.75);
+    --surface-hover: #F8FAFC;
+    --text-main: #0F172A; 
+    --text-muted: #64748B;
+    --border-light: #E2E8F0;
+    --border-focus: #CBD5E1;
+    
+    /* Hệ bóng đổ đa tầng sâu (Soft Stacked Shadows) loại bỏ vệt xám thô */
+    --modern-shadow: 
+        0 2px 4px rgba(15, 23, 42, 0.01),
+        0 4px 12px rgba(15, 23, 42, 0.03),
+        0 8px 20px rgba(15, 23, 42, 0.02);
+    --modern-shadow-hover: 
+        0 20px 25px -5px rgba(15, 23, 42, 0.06), 
+        0 10px 10px -6px rgba(15, 23, 42, 0.03),
+        0 0 0 1px rgba(15, 23, 42, 0.01);
+    
+    /* Cung chuyển động mô phỏng vật lý lò xo thực tế (Apple/Stripe Premium OS) */
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); 
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Thẻ Form */
-.auth-card {
-    width: 100%;
-    max-width: 420px; /* Thu gọn lại một chút để form nhìn cân đối, thanh lịch hơn */
-    background: var(--white);
-    border-radius: 24px;
-    padding: 3rem 2.5rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); /* Bóng đổ sâu và mềm hơn */
-    border: 1px solid rgba(226, 232, 240, 0.8);
+/* ==========================================================================
+   4. TRẠM HỒI NĂNG LƯỢNG (POMODORO) - Cơ học vật lý vi mô
+   ========================================================================== */
+.timer-circle {
+    /* Sử dụng clamp để vòng tròn co giãn mượt mà theo tỷ lệ màn hình */
+    width: clamp(240px, 35vw, 290px); 
+    height: clamp(240px, 35vw, 290px); 
+    border-radius: 50%;
+    background: var(--surface-white); 
+    border: 8px solid #F1F5F9; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    margin: 0 auto; 
+    box-shadow: var(--modern-shadow);
+    transition: transform 0.4s var(--ease-spring), border-color 0.4s ease, box-shadow 0.4s ease;
     position: relative;
-    overflow: hidden;
-    animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    isolation: isolate;
 }
 
-/* Viền màu trang trí mỏng và tinh tế hơn */
-.auth-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--primary-yellow), #FFA000);
+.timer-text { 
+    font-size: clamp(3.5rem, 6vw, 4.8rem); 
+    font-weight: 850; 
+    font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+    color: var(--text-main); 
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums; /* Giữ các con số không bị nhảy lệch vị trí khi chạy dây */
+    line-height: 1;
 }
 
-/* Phần Tiêu đề */
-.auth-header {
-    text-align: center;
-    margin-bottom: 2.5rem;
+/* Khi chạy Pomodoro: Tối ưu hoạt ảnh nhịp thở bằng scale() để không bị giật lag khung hình (GPU accelerated) */
+.timer-circle.running { 
+    border-color: var(--brand-accent); 
+    animation: pomodoro-breathe 4s infinite ease-in-out;
 }
 
-.auth-icon {
-    width: 56px;
-    height: 56px;
-    background: linear-gradient(135deg, var(--soft-yellow) 0%, #FFF4cc 100%);
-    color: #E6A300;
-    border-radius: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    margin-bottom: 1.2rem;
-    box-shadow: 0 8px 16px rgba(230, 163, 0, 0.15);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+@keyframes pomodoro-breathe {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 0 0 8px var(--brand-accent-soft), var(--modern-shadow); 
+    }
+    50% { 
+        transform: scale(1.02);
+        box-shadow: 0 0 0 20px rgba(245, 158, 11, 0.06), var(--modern-shadow-hover); 
+    }
 }
 
-.auth-card:hover .auth-icon {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 20px rgba(230, 163, 0, 0.2);
-}
-
-.auth-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: var(--dark-text);
-    margin-bottom: 0.4rem;
-    font-family: 'Inter', sans-serif; /* Đổi về Inter, bỏ Orbitron */
-    letter-spacing: -0.5px; /* Giúp chữ tiêu đề nhìn chặt chẽ, hiện đại hơn */
-}
-
-.auth-subtitle {
-    color: #64748B; /* Màu xám dịu mắt hơn */
+/* Nút bấm tiêu chuẩn */
+.btn-timer {
+    background: var(--surface-white);
+    color: var(--text-main);
+    border: 1px solid var(--border-light);
+    border-radius: 14px;
+    padding: 14px 38px;
+    font-weight: 700;
     font-size: 0.95rem;
-    font-weight: 400;
-}
-
-/* Ô nhập liệu có Icon */
-.auth-form-group {
-    margin-bottom: 1.2rem;
-    text-align: left;
-    position: relative; /* Để định vị icon bên trong */
-}
-
-.auth-label {
-    display: block;
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: #334155;
-    margin-bottom: 0.5rem;
-}
-
-/* Biểu tượng nằm trong ô input */
-.input-icon {
-    position: absolute;
-    left: 16px;
-    bottom: 14px;
-    font-size: 1.2rem;
-    color: #94A3B8;
-    transition: color 0.3s ease;
-}
-
-/* Chỉnh lại padding của ô input để chữ không bị đè vào icon con mắt bên phải */
-.auth-input {
-    width: 100%;
-    /* Tăng padding bên phải lên 44px (trên phải dưới trái) */
-    padding: 14px 44px 14px 44px; 
-    border-radius: 12px !important;
-    border: 1.5px solid #E2E8F0 !important;
-    background-color: var(--white) !important;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    color: var(--dark-text);
-    font-weight: 500;
-}
-
-/* Icon con mắt hiện/ẩn mật khẩu */
-.toggle-password {
-    position: absolute;
-    right: 16px;
-    bottom: 14px;
-    font-size: 1.2rem;
-    color: #94A3B8;
+    letter-spacing: -0.01em;
+    transition: var(--ease-spring);
     cursor: pointer;
-    transition: color 0.3s ease;
-    z-index: 10; /* Đảm bảo icon luôn nổi lên trên để click được */
-}
-
-/* Hiệu ứng khi di chuột vào icon con mắt */
-.toggle-password:hover {
-    color: var(--primary-yellow);
-}
-
-.auth-input {
-    width: 100%;
-    padding: 14px 16px 14px 44px; /* Tăng padding trái để chừa chỗ cho Icon */
-    border-radius: 12px !important;
-    border: 1.5px solid #E2E8F0 !important;
-    background-color: var(--white) !important;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    color: var(--dark-text);
-    font-weight: 500;
-}
-
-.auth-input::placeholder {
-    color: #94A3B8;
-    font-weight: 400;
-}
-
-/* Hiệu ứng khi focus vào ô input */
-.auth-input:focus {
-    border-color: var(--primary-yellow) !important;
-    box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.15) !important;
     outline: none;
 }
 
-.auth-input:focus + .input-icon,
-.auth-form-group:focus-within .input-icon {
-    color: #E6A300; /* Icon đổi màu khi đang nhập liệu */
+.btn-timer:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--modern-shadow-hover);
+    border-color: var(--brand-accent);
+    color: var(--brand-accent);
 }
 
-/* Nút Submit */
-/* Nút Submit (Đã đổi sang dải màu Vàng - Cam thương hiệu) */
-/* Nút Submit (Tone Trắng - Vàng thanh lịch) */
-.auth-btn {
+.btn-timer:active {
+    transform: translateY(1px) scale(0.98); 
+    box-shadow: var(--modern-shadow);
+}
+
+.btn-timer:focus-visible {
+    border-color: var(--brand-accent);
+    box-shadow: 0 0 0 2px var(--surface-white), 0 0 0 5px var(--brand-accent-glow);
+}
+
+/* ==========================================================================
+   8. FLASHCARD ITEM (LIST MANAGEMENT) - Hiệu ứng Cascade Thác đổ
+   ========================================================================== */
+.flashcard-item {
+    border-radius: 20px;
+    background: var(--surface-white);
+    border: 1px solid var(--border-light); 
+    transition: var(--ease-spring);
+    overflow: hidden;
+    position: relative;
+    padding: 16px;
+}
+
+.flashcard-item:hover,
+.flashcard-item:focus-within { 
+    transform: translateY(-6px) scale(1.005); 
+    box-shadow: var(--modern-shadow-hover);
+    border-color: var(--border-focus);
+}
+
+/* Tương tác vi mô xuất hiện mềm mại cho bộ nút thao tác */
+.card-actions {
+    opacity: 0; 
+    transform: translateY(8px) scale(0.95); 
+    transition: transform 0.4s var(--ease-spring), opacity 0.3s ease;
+}
+
+.flashcard-item:hover .card-actions,
+.flashcard-item:focus-within .card-actions {
+    opacity: 1;
+    transform: translateY(0) scale(1); 
+}
+
+/* ==========================================================================
+   10. GIAO DIỆN HỌC THẺ (ARENA / STUDY) - Không gian 3D Chiều sâu cao
+   ========================================================================== */
+.arena-wrapper {
+    max-width: 650px;
+    margin: 0 auto;
+    padding: clamp(16px, 3vw, 32px);
+}
+
+.scene {
     width: 100%;
-    padding: 14px;
-    border-radius: 12px;
-    background: var(--white); /* Nền trắng sạch sẽ */
-    color: #B8860B; /* Chữ màu vàng đồng đậm để đảm bảo độ tương phản, dễ đọc */
-    border: 2px solid var(--primary-yellow); /* Viền màu vàng thương hiệu */
-    font-weight: 700;
-    font-size: 1.05rem;
+    height: clamp(340px, 50vh, 420px); 
+    perspective: 2500px; /* Tăng độ sâu tiêu cự để trải nghiệm lật chân thực hoàn hảo */
+    margin: 2rem 0;
+}
+
+.flashcard {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.7s cubic-bezier(0.34, 1.7, 0.64, 1); /* Tăng nhẹ độ nảy lò xo khi lật thẻ */
+    transform-style: preserve-3d;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    outline: none;
+}
+
+/* Báo hiệu có thể lật - Fix lỗi trùng lặp tọa độ Y khi hover lúc đã lật */
+.flashcard:hover:not(.is-flipped),
+.flashcard:focus-visible:not(.is-flipped) {
+    transform: translateY(-8px) scale(1.01);
+}
+
+.flashcard.is-flipped {
+    transform: rotateY(180deg);
+}
+
+.flashcard.is-flipped:hover,
+.flashcard.is-flipped:focus-visible {
+    transform: translateY(-8px) rotateY(180deg) scale(1.01); 
+}
+
+.card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    margin-top: 1.8rem;
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.1); /* Đổ bóng vàng cực nhẹ */
-}
-
-.auth-btn i {
-    color: #B8860B; /* Icon cùng màu với chữ */
-    transition: transform 0.3s ease;
-}
-
-/* Hiệu ứng khi di chuột vào (Lấp đầy nền vàng) */
-.auth-btn:hover {
-    background: var(--primary-yellow); /* Đổi sang nền vàng */
-    color: var(--dark-text); /* Chữ chuyển về màu đen/xám đậm để nổi bật */
-    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3); /* Bóng tỏa rộng và sáng hơn */
-}
-
-.auth-btn:hover i {
-    color: var(--dark-text);
-    transform: translateX(5px); /* Mũi tên trượt nhẹ sang phải */
-}
-
-/* Hiệu ứng khi bấm xuống */
-.auth-btn:active {
-    transform: translateY(1px);
-    box-shadow: 0 4px 10px rgba(255, 215, 0, 0.15);
-}
-
-/* Liên kết chuyển trang */
-.auth-footer {
+    border-radius: 28px; 
+    padding: clamp(24px, 5vw, 48px);
     text-align: center;
-    margin-top: 2rem;
-    font-size: 0.95rem;
-    color: #64748B;
+    box-shadow: var(--modern-shadow);
+    border: 1px solid var(--border-light);
+    background: var(--surface-white);
+    transition: box-shadow 0.4s var(--ease-smooth), border-color 0.4s ease;
+    box-sizing: border-box;
 }
 
-.auth-link {
-    color: var(--dark-text);
-    font-weight: 700;
-    text-decoration: none;
-    transition: color 0.2s;
-    margin-left: 5px;
-    position: relative;
+.flashcard:hover .card-face,
+.flashcard:focus-visible .card-face {
+    box-shadow: var(--modern-shadow-hover);
 }
 
-.auth-link::after {
-    content: '';
+.flashcard:focus-visible .card-face {
+    border-color: var(--brand-accent);
+    box-shadow: 0 0 0 2px var(--surface-white), 0 0 0 6px var(--brand-accent-glow), var(--modern-shadow-hover);
+}
+
+.card-front {
+    z-index: 2;
+    color: var(--text-main);
+}
+
+/* Căn chỉnh Tag tiêu đề cao cấp dạng tinh thể pill */
+.card-face::before {
     position: absolute;
-    bottom: -2px; left: 0; right: 0;
-    height: 2px;
-    background-color: var(--primary-yellow);
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
-    transform-origin: left;
+    top: 28px;
+    padding: 6px 16px;
+    border-radius: 10px; 
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
 }
 
-.auth-link:hover::after {
-    transform: scaleX(1);
+.card-front::before {
+    content: "CÂU HỎI";
+    background: var(--surface-hover);
+    color: var(--text-muted);
+    border: 1px solid var(--border-light);
 }
 
-/* Hiệu ứng trượt lên */
-@keyframes slideUpFade {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+/* Mặt sau ứng dụng nhẹ Glassmorphic hòa trộn sắc màu ấm áp */
+.card-back {
+    background: linear-gradient(135deg, var(--brand-accent-soft) 0%, #FFFDF0 100%); 
+    color: var(--text-main);
+    transform: rotateY(180deg); 
+    border: 1px solid rgba(245, 158, 11, 0.3); 
+}
+
+.card-back::before {
+    content: "ĐÁP ÁN";
+    background: var(--brand-gradient, linear-gradient(135deg, #F59E0B 0%, #D97706 100%));
+    color: var(--surface-white);
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);
+}
+
+/* Nội dung chữ thích ứng linh hoạt kích thước để tránh tràn viền */
+.card-content {
+    font-size: clamp(1.6rem, 5vw, 2.6rem); 
+    font-weight: 850;
+    line-height: 1.35;
+    color: inherit;
+    letter-spacing: -0.03em;
+    word-break: break-word;
+}
+
+/* Label hướng dẫn mờ tinh tế phía đáy thẻ */
+.instruction-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    position: absolute;
+    bottom: 28px;
+    font-size: 0.85rem;
+    background: rgba(15, 23, 42, 0.03);
+    padding: 4px 12px;
+    border-radius: 8px;
+    opacity: 0.4;
+    transition: opacity 0.3s var(--ease-smooth), background 0.3s ease;
+}
+
+.flashcard:hover .instruction-label {
+    opacity: 1; 
+    background: rgba(15, 23, 42, 0.05);
+}
+
+.card-back .instruction-label {
+    background: rgba(245, 158, 11, 0.05);
+}
+.card-back:hover .instruction-label {
+    background: rgba(245, 158, 11, 0.1);
 }
