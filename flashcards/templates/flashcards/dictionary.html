@@ -26,9 +26,14 @@
             <div class="row g-3 mb-4">
                 <div class="col-md-4">
                     <select id="dict-lang" class="form-select form-select-lg bg-light border-0 shadow-none rounded-3 fw-bold text-muted">
-                        <option value="en|vi">🇬🇧 Anh - Việt</option>
-                        <option value="zh|vi">🇨🇳 Trung - Việt</option>
-                        <option value="ko|vi">🇰🇷 Hàn - Việt</option>
+                        <option value="en|vi-VN">🇬🇧 Anh - Việt</option>
+                        <option value="vi-VN|en">🇻🇳 Việt - Anh</option>
+                        
+                        <option value="zh-CN|vi-VN">🇨🇳 Trung - Việt</option>
+                        <option value="vi-VN|zh-CN">🇻🇳 Việt - Trung</option>
+                        
+                        <option value="ko-KR|vi-VN">🇰🇷 Hàn - Việt</option>
+                        <option value="vi-VN|ko-KR">🇻🇳 Việt - Hàn</option>
                     </select>
                 </div>
                 <div class="col-md-8">
@@ -246,7 +251,7 @@
     // Khởi tạo giao diện
     document.addEventListener("DOMContentLoaded", renderVocabLists);
 
-    // ================= HÀM TRA CỨU TỪ API (Giữ nguyên) =================
+    // ================= HÀM TRA CỨU TỪ SỬ DỤNG GOOGLE TRANSLATE API CHUẨN =================
     function searchWord() {
         const word = document.getElementById('dict-input').value.trim();
         const langPair = document.getElementById('dict-lang').value;
@@ -258,21 +263,33 @@
         searchBtn.innerHTML = '<i class="ph ph-spinner-gap ph-spin"></i> Đang tìm...';
         searchBtn.disabled = true;
 
-        fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=${langPair}`)
+        // Xử lý mã ngôn ngữ để tương thích tốt nhất với Google API (Ví dụ: vi-VN -> vi)
+        const langs = langPair.split('|');
+        const sl = langs[0].replace('-VN', '').replace('-KR', ''); 
+        const tl = langs[1].replace('-VN', '').replace('-KR', '');
+
+        // Endpoint của Google Translate
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(word)}`;
+
+        fetch(url)
             .then(res => res.json())
             .then(data => {
-                if (data.responseData && data.responseData.translatedText) {
+                // Google trả về dữ liệu dạng mảng lồng nhau, chuỗi kết quả dịch nằm ở vị trí data[0][0][0]
+                if (data && data[0] && data[0][0] && data[0][0][0]) {
                     document.getElementById('result-word').innerText = word;
-                    document.getElementById('result-meaning').innerText = data.responseData.translatedText;
+                    document.getElementById('result-meaning').innerText = data[0][0][0];
                     resultBox.style.display = 'block';
+                } else {
+                    Swal.fire('Lỗi', 'Không tìm thấy kết quả dịch cho từ này.', 'error');
                 }
             })
-            .catch(() => Swal.fire('Lỗi', 'Không thể kết nối máy chủ.', 'error'))
+            .catch(() => Swal.fire('Lỗi', 'Không thể kết nối máy chủ dịch.', 'error'))
             .finally(() => {
                 searchBtn.innerHTML = '<i class="ph-bold ph-magnifying-glass"></i> Tra cứu';
                 searchBtn.disabled = false;
             });
     }
+
     function handleEnter(e) { if (e.key === 'Enter') searchWord(); }
 </script>
 {% endblock %}

@@ -18,6 +18,47 @@
     <link rel="stylesheet" href="{% static 'css/theme_settings.css' %}">
     
     {% block extra_css %}{% endblock %}
+
+    <style>
+        /* CSS cho Widget nổi ở góc dưới */
+        .energy-widget {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background-color: var(--card-bg, #ffffff);
+            color: var(--text-color, #333);
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 9999;
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            border: 2px solid #FFD700;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        
+        .energy-widget:hover {
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 6px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .energy-widget.done {
+            border-color: #28a745;
+            color: #28a745;
+            animation: pulse-widget 1.5s infinite;
+        }
+
+        @keyframes pulse-widget {
+            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(40, 167, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
+    </style>
 </head>
 <body>
 
@@ -164,7 +205,7 @@
             
             <div class="settings-section">
                 <span class="section-title">Giao diện</span>
-                <div class="theme-toggle-wrapper">
+                <div class="theme-toggle-wrapper mb-3">
                     <div>
                         <p class="mb-0 fw-bold">Chế độ Cyberpunk</p>
                         <small class="text-muted">Màu đen & xanh neon cực ngầu</small>
@@ -174,15 +215,31 @@
                         <span class="cyber-slider"></span>
                     </label>
                 </div>
+                
+                <div class="theme-toggle-wrapper">
+                    <div>
+                        <p class="mb-0 fw-bold">Widget năng lượng</p>
+                        <small class="text-muted">Đồng hồ trôi nổi ở góc màn hình</small>
+                    </div>
+                    <label class="cyber-switch">
+                        <input type="checkbox" id="widgetToggle" checked>
+                        <span class="cyber-slider"></span>
+                    </label>
+                </div>
             </div>
         </div>
 
         <div class="modal-footer" style="display: flex; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid var(--border-color); margin-top: 12px; width: 100%; box-sizing: border-box;">
-            <button class="btn-yellow" onclick="location.reload()" style="padding: 10px 24px; font-size: 0.9rem; border-radius: 10px;">
-                Lưu thay đổi
+            <button class="btn-yellow" id="saveAndCloseSettings" style="padding: 10px 24px; font-size: 0.9rem; border-radius: 10px; border: none; font-weight: bold;">
+                Lưu & Đóng
             </button>
         </div>
     </div>
+</div>
+
+<div id="global-energy-widget" class="energy-widget shadow-lg" style="display: none;" title="Quay lại Trạm năng lượng">
+    <i class="ph-fill ph-lightning text-warning"></i>
+    <span id="global-energy-time">25:00</span>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -196,9 +253,11 @@
     const modal = document.getElementById('settingsModal');
     const openBtn = document.getElementById('openSettings');
     const closeBtn = document.getElementById('closeSettings');
+    const saveAndCloseBtn = document.getElementById('saveAndCloseSettings');
 
     openBtn.onclick = () => modal.classList.add('show');
     closeBtn.onclick = () => modal.classList.remove('show');
+    saveAndCloseBtn.onclick = () => modal.classList.remove('show');
     window.onclick = (e) => { if(e.target == modal) modal.classList.remove('show'); }
 
     // --- LOGIC DARK MODE (CYBERPUNK) ---
@@ -220,7 +279,80 @@
         }
     });
 
-    // --- LOGIC SIDEBAR & STATS ---
+    // --- LOGIC BẬT/TẮT WIDGET ---
+    const widgetToggle = document.getElementById('widgetToggle');
+    let isWidgetEnabled = localStorage.getItem('pomodoro_show_widget') !== 'false';
+    widgetToggle.checked = isWidgetEnabled;
+
+    widgetToggle.addEventListener('change', function() {
+        localStorage.setItem('pomodoro_show_widget', this.checked);
+        updateGlobalWidgetUI(); 
+    });
+
+
+    // --- LOGIC WIDGET TRÔI NỔI (ĐẾM NGƯỢC TOÀN CỤC) ---
+    let widgetInterval = null;
+    const widget = document.getElementById('global-energy-widget');
+    const timeDisplay = document.getElementById('global-energy-time');
+
+    function updateGlobalWidgetUI() {
+        let isRunning = sessionStorage.getItem('pomodoro_running') === 'true';
+        let savedEndTime = sessionStorage.getItem('pomodoro_endTime');
+        let isAllowed = localStorage.getItem('pomodoro_show_widget') !== 'false';
+        let isPomodoroPage = window.location.pathname.includes('/pomodoro/'); 
+
+        if (isRunning && savedEndTime && isAllowed && !isPomodoroPage) {
+            widget.style.display = 'flex';
+            let remaining = Math.floor((parseInt(savedEndTime) - Date.now()) / 1000);
+            
+            if (remaining > 0) {
+                let m = String(Math.floor(remaining / 60)).padStart(2, '0');
+                let s = String(remaining % 60).padStart(2, '0');
+                timeDisplay.innerText = `${m}:${s}`;
+                widget.classList.remove('done');
+            } else {
+                timeDisplay.innerText = "NHẬN ĐIỆN!";
+                widget.classList.add('done');
+            }
+        } else {
+            widget.style.display = 'none';
+        }
+    }
+
+    // --- HỆ THỐNG PHẠT GIAN LẬN TOÀN CỤC TRÊN CÁC TRANG KHÁC ---
+    let isWidgetUnloading = false;
+    window.addEventListener('beforeunload', () => { isWidgetUnloading = true; });
+
+    function handleGlobalCheat() {
+        let isRunning = sessionStorage.getItem('pomodoro_running') === 'true';
+        let isPomodoroPage = window.location.pathname.includes('/pomodoro/'); 
+        
+        // Nếu đang ở chính trang Pomodoro, hãy để script của trang đó tự xử lý đồng bộ UI
+        if (isPomodoroPage) return; 
+
+        if (isRunning && !isWidgetUnloading) {
+            // Hủy trạng thái đếm ngược toàn hệ thống
+            sessionStorage.removeItem('pomodoro_running');
+            sessionStorage.removeItem('pomodoro_endTime');
+            updateGlobalWidgetUI();
+
+            // Hiển thị thông báo phạt
+            Swal.fire({
+                title: 'Thất bại!',
+                text: 'Tiến trình nạp năng lượng đã bị hủy do bạn rời khỏi tab làm việc.',
+                icon: 'error',
+                confirmButtonText: 'Đã hiểu',
+                confirmButtonColor: '#dc3545'
+            });
+        }
+    }
+
+    // Đăng ký trình lắng nghe gian lận trên Widget toàn cục
+    document.addEventListener("visibilitychange", () => { if (document.hidden) handleGlobalCheat(); });
+    window.addEventListener("blur", handleGlobalCheat);
+
+
+    // Chạy khi trang web load
     document.addEventListener("DOMContentLoaded", function () {
         const sidebar = document.querySelector('.sidebar');
         const overlay = document.querySelector('.overlay');
@@ -246,6 +378,14 @@
         if (xpBar) xpBar.style.width = `${(currentXp / xpNeeded) * 100}%`;
         if (xpText) xpText.innerText = `${currentXp}/${xpNeeded}`;
         {% endif %}
+        
+        // Chạy cập nhật widget liên tục mỗi giây
+        updateGlobalWidgetUI();
+        widgetInterval = setInterval(updateGlobalWidgetUI, 1000);
+
+        widget.addEventListener('click', function() {
+            window.location.href = "{% url 'pomodoro' %}"; 
+        });
     });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>

@@ -245,6 +245,27 @@ def delete_deck(request, deck_id):
         messages.info(request, "Đã xóa bộ thẻ.")
     return redirect('dashboard')
 
+@login_required(login_url='/login/')
+def bulk_delete_cards(request, deck_id):
+    if request.method == 'POST':
+        # 1. Lấy bộ thẻ và bắt buộc phải thuộc sở hữu của người dùng đang đăng nhập
+        deck = get_object_or_404(Deck, id=deck_id, user=request.user)
+        
+        # 2. Lấy danh sách các ID thẻ được chọn từ checkbox (name="card_ids")
+        card_ids = request.POST.getlist('card_ids')
+        
+        if card_ids:
+            # 3. ĐÃ SỬA: Đổi từ 'Card' thành 'Flashcard' cho đúng với Model định nghĩa ở trên
+            # Lọc thêm deck=deck để đảm bảo an toàn tuyệt đối, không bị xóa nhầm thẻ của bộ khác
+            deleted_count, _ = Flashcard.objects.filter(id__in=card_ids, deck=deck).delete()
+            
+            # Gửi thông báo thành công hiển thị số lượng thẻ thực tế đã bị xóa
+            messages.success(request, f'Đã xóa thành công {deleted_count} thẻ ra khỏi bộ từ vựng!')
+        else:
+            messages.warning(request, 'Bạn chưa chọn thẻ nào để tiến hành xóa.')
+            
+    # Chuyển hướng quay trở lại đúng trang thêm/quản lý thẻ hiện tại
+    return redirect('add_card', deck_id=deck_id)
 
 # ==========================================
 # 4. QUẢN LÝ THẺ (FLASHCARDS)
@@ -299,29 +320,43 @@ def import_cards_csv(request, deck_id):
             decoded_file = csv_file.read().decode('utf-8-sig').splitlines()
             reader = csv.reader(decoded_file)
             
+            # 1. Lấy danh sách các mặt trước đã tồn tại trong bộ thẻ này (Dùng set để tra cứu siêu nhanh)
+            existing_fronts = set(Flashcard.objects.filter(deck=deck).values_list('front_side', flat=True))
+            skipped_count = 0 # Bộ đếm số thẻ bị bỏ qua do trùng
+            
             new_cards = []
             for row in reader:
                 if len(row) >= 2:
                     front = row[0].strip()
                     back = row[1].strip()
                     if front and back:
+                        # 2. Nếu mặt trước đã tồn tại, tăng biến đếm và bỏ qua dòng này
+                        if front in existing_fronts:
+                            skipped_count += 1
+                            continue
+                        
+                        # Nếu là từ mới, thêm vào danh sách chờ và cập nhật luôn vào set để chống trùng nếu file CSV có các dòng giống nhau
                         new_cards.append(Flashcard(deck=deck, front_side=front, back_side=back))
+                        existing_fronts.add(front)
             
+            # 3. Tiến hành lưu và thông báo kết quả dựa trên số lượng thẻ mới lọc được
             if new_cards:
                 Flashcard.objects.bulk_create(new_cards)
-                messages.success(request, f'Tuyệt vời! Đã import thành công {len(new_cards)} thẻ mới.')
+                success_msg = f'Tuyệt vời! Đã import thành công {len(new_cards)} thẻ mới.'
+                if skipped_count > 0:
+                    success_msg += f' (Đã tự động loại bỏ {skipped_count} từ bị trùng).'
+                messages.success(request, success_msg)
             else:
-                messages.warning(request, 'Không tìm thấy dữ liệu hợp lệ trong file (Yêu cầu Cột 1: Mặt trước, Cột 2: Mặt sau).')
+                if skipped_count > 0:
+                    messages.warning(request, f'Không có thẻ mới nào được thêm. Toàn bộ {skipped_count} từ trong file đều đã tồn tại trong bộ thẻ!')
+                else:
+                    messages.warning(request, 'Không tìm thấy dữ liệu hợp lệ trong file (Yêu cầu Cột 1: Mặt trước, Cột 2: Mặt sau).')
                 
         except Exception as e:
             messages.error(request, f'Có lỗi xảy ra khi đọc file: {str(e)}')
             
     return redirect('add_card', deck_id=deck.id)
 
-
-# ==========================================
-# 5. AI STUDIO & AI GENERATION (LUỒNG MỚI CHUẨN UX)
-# ==========================================
 
 @login_required(login_url='/login/')
 def global_ai_studio(request):
@@ -334,120 +369,163 @@ def global_ai_studio(request):
 def ai_generate_topic_raw(request):
     """
     Trả về dữ liệu JSON thẻ (mock) cho UI hiển thị thay vì lưu thẳng vào DB.
-    Hỗ trợ 5 chủ đề: Động vật, Trái cây, Màu sắc, Gia đình, Thời tiết.
+    ĐÃ SỬA: Đọc biến 'language' để trả về đúng ngôn ngữ người dùng yêu cầu.
     """
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             topic = data.get('topic', '').strip().lower()
+            language = data.get('language', 'en') # LẤY NGÔN NGỮ TỪ FRONTEND
             
             if not topic:
                 return JsonResponse({'status': 'error', 'message': 'Vui lòng nhập chủ đề!'})
 
+            mock_data = []
+
             # --- CHỦ ĐỀ 1: ĐỘNG VẬT ---
             if 'động vật' in topic or 'dong vat' in topic or 'animal' in topic:
-                mock_data = [
-                    {"front": "Dog", "back": "Con Chó (Tiếng Anh)"},
-                    {"front": "狗 (Gǒu)", "back": "Con Chó (Tiếng Trung)"},
-                    {"front": "개 (Gae)", "back": "Con Chó (Tiếng Hàn)"},
-                    {"front": "Cat", "back": "Con Mèo (Tiếng Anh)"},
-                    {"front": "猫 (Māo)", "back": "Con Mèo (Tiếng Trung)"},
-                    {"front": "고양이 (Goyang-i)", "back": "Con Mèo (Tiếng Hàn)"},
-                    {"front": "Lion", "back": "Sư Tử (Tiếng Anh)"},
-                    {"front": "狮子 (Shīzi)", "back": "Sư Tử (Tiếng Trung)"},
-                    {"front": "사자 (Saja)", "back": "Sư Tử (Tiếng Hàn)"}
-                ]
-                return JsonResponse({'status': 'success', 'cards': mock_data})
+                if language == 'en':
+                    mock_data = [
+                        {"front": "Dog", "back": "Con Chó"},
+                        {"front": "Cat", "back": "Con Mèo"},
+                        {"front": "Lion", "back": "Sư Tử"}
+                    ]
+                elif language == 'zh':
+                    mock_data = [
+                        {"front": "狗 (Gǒu)", "back": "Con Chó"},
+                        {"front": "猫 (Māo)", "back": "Con Mèo"},
+                        {"front": "狮子 (Shīzi)", "back": "Sư Tử"}
+                    ]
+                elif language == 'ko':
+                    mock_data = [
+                        {"front": "개 (Gae)", "back": "Con Chó"},
+                        {"front": "고양이 (Goyang-i)", "back": "Con Mèo"},
+                        {"front": "사자 (Saja)", "back": "Sư Tử"}
+                    ]
 
-            # --- CHỦ ĐỀ 2: TRÁI CÂY (MỚI) ---
+            # --- CHỦ ĐỀ 2: TRÁI CÂY ---
             elif 'trái cây' in topic or 'trai cay' in topic or 'hoa quả' in topic or 'fruit' in topic:
-                mock_data = [
-                    {"front": "Apple", "back": "Quả Táo (Tiếng Anh)"},
-                    {"front": "苹果 (Píngguǒ)", "back": "Quả Táo (Tiếng Trung)"},
-                    {"front": "사과 (Sagwa)", "back": "Quả Táo (Tiếng Hàn)"},
-                    {"front": "Banana", "back": "Quả Chuối (Tiếng Anh)"},
-                    {"front": "香蕉 (Xiāngjiāo)", "back": "Quả Chuối (Tiếng Trung)"},
-                    {"front": "바나나 (Banana)", "back": "Quả Chuối (Tiếng Hàn)"},
-                    {"front": "Orange", "back": "Quả Cam (Tiếng Anh)"},
-                    {"front": "橙子 (Chéngzi)", "back": "Quả Cam (Tiếng Trung)"},
-                    {"front": "오렌지 (Orenji)", "back": "Quả Cam (Tiếng Hàn)"}
-                ]
-                return JsonResponse({'status': 'success', 'cards': mock_data})
+                if language == 'en':
+                    mock_data = [
+                        {"front": "Apple", "back": "Quả Táo"},
+                        {"front": "Banana", "back": "Quả Chuối"},
+                        {"front": "Orange", "back": "Quả Cam"}
+                    ]
+                elif language == 'zh':
+                    mock_data = [
+                        {"front": "苹果 (Píngguǒ)", "back": "Quả Táo"},
+                        {"front": "香蕉 (Xiāngjiāo)", "back": "Quả Chuối"},
+                        {"front": "橙子 (Chéngzi)", "back": "Quả Cam"}
+                    ]
+                elif language == 'ko':
+                    mock_data = [
+                        {"front": "사과 (Sagwa)", "back": "Quả Táo"},
+                        {"front": "바나나 (Banana)", "back": "Quả Chuối"},
+                        {"front": "오렌지 (Orenji)", "back": "Quả Cam"}
+                    ]
 
-            # --- CHỦ ĐỀ 3: MÀU SẮC (MỚI) ---
+            # --- CHỦ ĐỀ 3: MÀU SẮC ---
             elif 'màu sắc' in topic or 'mau sac' in topic or 'color' in topic:
-                mock_data = [
-                    {"front": "Red", "back": "Màu Đỏ (Tiếng Anh)"},
-                    {"front": "红色 (Hóngsè)", "back": "Màu Đỏ (Tiếng Trung)"},
-                    {"front": "빨간색 (Ppalgansaek)", "back": "Màu Đỏ (Tiếng Hàn)"},
-                    {"front": "Blue", "back": "Màu Xanh Dương (Tiếng Anh)"},
-                    {"front": "蓝色 (Lánsè)", "back": "Màu Xanh Dương (Tiếng Trung)"},
-                    {"front": "파란색 (Paransaek)", "back": "Màu Xanh Dương (Tiếng Hàn)"},
-                    {"front": "Green", "back": "Màu Xanh Lá (Tiếng Anh)"},
-                    {"front": "绿色 (Lǜsè)", "back": "Màu Xanh Lá (Tiếng Trung)"},
-                    {"front": "초록색 (Choroksaek)", "back": "Màu Xanh Lá (Tiếng Hàn)"}
-                ]
-                return JsonResponse({'status': 'success', 'cards': mock_data})
+                if language == 'en':
+                    mock_data = [
+                        {"front": "Red", "back": "Màu Đỏ"},
+                        {"front": "Blue", "back": "Màu Xanh Dương"},
+                        {"front": "Green", "back": "Màu Xanh Lá"}
+                    ]
+                elif language == 'zh':
+                    mock_data = [
+                        {"front": "红色 (Hóngsè)", "back": "Màu Đỏ"},
+                        {"front": "蓝色 (Lánsè)", "back": "Màu Xanh Dương"},
+                        {"front": "绿色 (Lǜsè)", "back": "Màu Xanh Lá"}
+                    ]
+                elif language == 'ko':
+                    mock_data = [
+                        {"front": "빨간색 (Ppalgansaek)", "back": "Màu Đỏ"},
+                        {"front": "파란색 (Paransaek)", "back": "Màu Xanh Dương"},
+                        {"front": "초록색 (Choroksaek)", "back": "Màu Xanh Lá"}
+                    ]
 
-            # --- CHỦ ĐỀ 4: GIA ĐÌNH (MỚI) ---
+            # --- CHỦ ĐỀ 4: GIA ĐÌNH ---
             elif 'gia đình' in topic or 'gia dinh' in topic or 'family' in topic:
-                mock_data = [
-                    {"front": "Father", "back": "Bố / Cha (Tiếng Anh)"},
-                    {"front": "爸爸 (Bàba)", "back": "Bố / Cha (Tiếng Trung)"},
-                    {"front": "아버지 (Abeoji)", "back": "Bố / Cha (Tiếng Hàn)"},
-                    {"front": "Mother", "back": "Mẹ (Tiếng Anh)"},
-                    {"front": "妈妈 (Māma)", "back": "Mẹ (Tiếng Trung)"},
-                    {"front": "어머니 (Eomeoni)", "back": "Mẹ (Tiếng Hàn)"},
-                    {"front": "Older Brother", "back": "Anh Trai (Tiếng Anh)"},
-                    {"front": "哥哥 (Gēge)", "back": "Anh Trai (Tiếng Trung)"},
-                    {"front": "형 (Hyeong)", "back": "Anh Trai (Tiếng Hàn)"}
-                ]
-                return JsonResponse({'status': 'success', 'cards': mock_data})
+                if language == 'en':
+                    mock_data = [
+                        {"front": "Father", "back": "Bố / Cha"},
+                        {"front": "Mother", "back": "Mẹ"},
+                        {"front": "Older Brother", "back": "Anh Trai"}
+                    ]
+                elif language == 'zh':
+                    mock_data = [
+                        {"front": "爸爸 (Bàba)", "back": "Bố / Cha"},
+                        {"front": "妈妈 (Māma)", "back": "Mẹ"},
+                        {"front": "哥哥 (Gēge)", "back": "Anh Trai"}
+                    ]
+                elif language == 'ko':
+                    mock_data = [
+                        {"front": "아버지 (Abeoji)", "back": "Bố / Cha"},
+                        {"front": "어머니 (Eomeoni)", "back": "Mẹ"},
+                        {"front": "형 (Hyeong)", "back": "Anh Trai"}
+                    ]
 
-            # --- CHỦ ĐỀ 5: THỜI TIẾT (MỚI) ---
+            # --- CHỦ ĐỀ 5: THỜI TIẾT ---
             elif 'thời tiết' in topic or 'thoi tiet' in topic or 'weather' in topic:
-                mock_data = [
-                    {"front": "Sunny", "back": "Trời Nắng (Tiếng Anh)"},
-                    {"front": "晴天 (Qíngtiān)", "back": "Trời Nắng (Tiếng Trung)"},
-                    {"front": "맑음 (Malgeum)", "back": "Trời Nắng (Tiếng Hàn)"},
-                    {"front": "Rainy", "back": "Trời Mưa (Tiếng Anh)"},
-                    {"front": "下雨 (Xiàyǔ)", "back": "Trời Mưa (Tiếng Trung)"},
-                    {"front": "비 (Bi)", "back": "Trời Mưa (Tiếng Hàn)"},
-                    {"front": "Windy", "back": "Có Gió (Tiếng Anh)"},
-                    {"front": "刮风 (Guāfēng)", "back": "Có Gió (Tiếng Trung)"},
-                    {"front": "바람 (Baram)", "back": "Có Gió (Tiếng Hàn)"}
-                ]
-                return JsonResponse({'status': 'success', 'cards': mock_data})
-
+                if language == 'en':
+                    mock_data = [
+                        {"front": "Sunny", "back": "Trời Nắng"},
+                        {"front": "Rainy", "back": "Trời Mưa"},
+                        {"front": "Windy", "back": "Có Gió"}
+                    ]
+                elif language == 'zh':
+                    mock_data = [
+                        {"front": "晴天 (Qíngtiān)", "back": "Trời Nắng"},
+                        {"front": "下雨 (Xiàyǔ)", "back": "Trời Mưa"},
+                        {"front": "刮风 (Guāfēng)", "back": "Có Gió"}
+                    ]
+                elif language == 'ko':
+                    mock_data = [
+                        {"front": "맑음 (Malgeum)", "back": "Trời Nắng"},
+                        {"front": "비 (Bi)", "back": "Trời Mưa"},
+                        {"front": "바람 (Baram)", "back": "Có Gió"}
+                    ]
+            
             else:
                 return JsonResponse({
                     'status': 'error', 
-                    'message': 'Bản Demo hiện tại chỉ hỗ trợ các chủ đề: Động vật, Trái cây, Màu sắc, Gia đình, Thời tiết.'
+                    'message': 'Bản Demo hiện tại chỉ hỗ trợ: Động vật, Trái cây, Màu sắc, Gia đình, Thời tiết.'
                 })
+
+            return JsonResponse({'status': 'success', 'cards': mock_data})
                 
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': f'Lỗi hệ thống: {str(e)}'})
             
     return JsonResponse({'status': 'error', 'message': 'Phương thức không hợp lệ'}, status=400)
 
+
 @csrf_exempt
 @login_required(login_url='/login/')
 def ai_generate_image_raw(request):
     """
-    Nhận file ảnh và trả về danh sách thẻ (mock) cho UI.
+    Nhận file ảnh và trả về danh sách thẻ theo ngôn ngữ.
     """
     if request.method == 'POST':
         try:
             upload_file = request.FILES.get('file')
+            # VỚI FORM DATA (Ảnh), dữ liệu text nằm trong request.POST
+            language = request.POST.get('language', 'en') 
+            
             if not upload_file:
                 return JsonResponse({'status': 'error', 'message': 'Không tìm thấy file!'})
                 
-            mock_horse = [
-                {"front": "Horse", "back": "Con Ngựa (Tiếng Anh)"},
-                {"front": "马 (Mǎ)", "back": "Con Ngựa (Tiếng Trung)"},
-                {"front": "말 (Mal)", "back": "Con Ngựa (Tiếng Hàn)"}
-            ]
-            return JsonResponse({'status': 'success', 'cards': mock_horse})
+            mock_data = []
+            if language == 'en':
+                mock_data = [{"front": "Horse", "back": "Con Ngựa"}]
+            elif language == 'zh':
+                mock_data = [{"front": "马 (Mǎ)", "back": "Con Ngựa"}]
+            elif language == 'ko':
+                mock_data = [{"front": "말 (Mal)", "back": "Con Ngựa"}]
+                
+            return JsonResponse({'status': 'success', 'cards': mock_data})
+            
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': f'Lỗi: {str(e)}'})
             
@@ -466,11 +544,15 @@ def save_single_card(request):
             deck_id = data.get('deck_id')
             front = data.get('front')
             back = data.get('back')
+            # Lấy thêm language nếu Model Flashcard của bạn có trường ngôn ngữ
+            # language = data.get('language') 
             
             if not deck_id or not front or not back:
                 return JsonResponse({'status': 'error', 'message': 'Dữ liệu không hợp lệ!'})
 
             deck = get_object_or_404(Deck, id=deck_id, user=request.user)
+            
+            # Nếu model của bạn cần truyền ngôn ngữ, hãy thêm vào đây: language=language
             Flashcard.objects.create(deck=deck, front_side=front, back_side=back)
             
             return JsonResponse({'status': 'success', 'message': 'Đã lưu thẻ!'})
@@ -629,18 +711,22 @@ def save_study_session(request):
 # ==========================================
 # 7. TỪ ĐIỂN & THƯ VIỆN TỔNG HỢP
 # ==========================================
+# Đảm bảo bạn đã import đúng Model DictionaryWord và pandas (pd) ở đầu file
 
 def dictionary_view(request):
     return render(request, 'flashcards/dictionary.html')
 
+
 def all_vocab_view(request):
-    words = DictionaryWord.objects.all().values('language', 'word', 'meaning')
+    # SỬA LỖI 1: Bổ sung 'id' vào câu lệnh query values
+    words = DictionaryWord.objects.all().values('id', 'language', 'word', 'meaning')
     formatted_words = []
     flag_map = {'en': '🇬🇧', 'zh': '🇨🇳', 'ko': '🇰🇷'}
     name_map = {'en': 'Tiếng Anh', 'zh': 'Tiếng Trung', 'ko': 'Tiếng Hàn'}
     
     for w in words:
         formatted_words.append({
+            'id': w['id'], # <-- Đã có ID cung cấp cho JavaScript render
             'lang': w['language'],
             'flag': flag_map.get(w['language'], '🌍'),
             'langName': name_map.get(w['language'], 'Khác'),
@@ -651,12 +737,14 @@ def all_vocab_view(request):
     context = {'db_words': json.dumps(formatted_words)}
     return render(request, 'flashcards/all_vocab.html', context)
 
+
 def upload_csv_view(request):
     if request.method == 'POST' and request.FILES.get('csv_file'):
         uploaded_file = request.FILES['csv_file']
         file_name = uploaded_file.name.lower()
         
         try:
+            # Đọc file dựa trên định dạng bằng pandas
             if file_name.endswith('.csv'):
                 df = pd.read_csv(uploaded_file)
             elif file_name.endswith(('.xlsx', '.xls')):
@@ -666,26 +754,59 @@ def upload_csv_view(request):
                 return redirect('all_vocab')
 
             df = df.fillna('')
-            words_to_create = []
             
+            # 1. Lấy toàn bộ từ vựng đã có trong Từ điển đưa vào Set để check trùng cực nhanh
+            existing_words = set(DictionaryWord.objects.values_list('word', flat=True))
+            
+            words_to_create = []
+            skipped_count = 0  # Bộ đếm số từ bị trùng
+            
+            # 2. Duyệt qua từng dòng dữ liệu bằng pandas
             for index, row in df.iterrows():
                 word = str(row.get('Word', '')).strip()
                 meaning = str(row.get('Meaning', '')).strip()
                 language = str(row.get('Language', 'en')).strip()
                 
                 if word and meaning:
+                    # 3. KIỂM TRA TRÙNG LẶP: Nếu từ này đã tồn tại trong DB hoặc đã xử lý ở dòng trên
+                    if word in existing_words:
+                        skipped_count += 1
+                        continue # Bỏ qua dòng này
+                    
+                    # Nếu là từ mới hoàn toàn
                     words_to_create.append(DictionaryWord(word=word, meaning=meaning, language=language))
+                    
+                    # Thêm ngay từ này vào set để nếu dòng dưới có bị lặp lại thì sẽ bị phát hiện ngay
+                    existing_words.add(word)
             
+            # 4. Lưu và đưa ra thông báo thông minh cho người dùng
             if words_to_create:
                 DictionaryWord.objects.bulk_create(words_to_create)
-                messages.success(request, f"🎉 Đã tải lên thành công {len(words_to_create)} từ vựng!")
+                success_msg = f"🎉 Đã tải lên thành công {len(words_to_create)} từ vựng mới!"
+                if skipped_count > 0:
+                    success_msg += f" (Đã tự động loại bỏ {skipped_count} từ bị trùng)."
+                messages.success(request, success_msg)
             else:
-                messages.warning(request, "File không có dữ liệu hoặc sai tên cột (Cần có cột 'Word' và 'Meaning').")
+                if skipped_count > 0:
+                    messages.warning(request, f"Không có từ mới nào được thêm. Toàn bộ {skipped_count} từ trong file đều đã tồn tại trong từ điển!")
+                else:
+                    messages.warning(request, "File không có dữ liệu hoặc sai tên cột (Cần có cột 'Word' và 'Meaning').")
                 
         except Exception as e:
             messages.error(request, f"Đã xảy ra lỗi khi đọc file: {str(e)}")
             
     return redirect('all_vocab')
+
+
+# BỔ SUNG: Hàm xóa đơn lẻ một từ vựng giải quyết dứt điểm lỗi 404
+def delete_single_vocab(request, vocab_id):
+    if request.method == 'POST':
+        word_obj = get_object_or_404(DictionaryWord, id=vocab_id)
+        word_text = word_obj.word
+        word_obj.delete()
+        messages.success(request, f"Đã xóa từ '{word_text}' thành công!")
+    return redirect('all_vocab')
+
 
 def delete_all_vocab(request):
     if request.method == 'POST':
@@ -693,6 +814,17 @@ def delete_all_vocab(request):
         messages.success(request, "Đã dọn sạch thư viện từ vựng!")
     return redirect('all_vocab')
 
+
+def bulk_delete_vocab(request):
+    if request.method == 'POST':
+        vocab_ids = request.POST.getlist('vocab_ids')
+        # SỬA LỖI 2: Đổi từ Vocabulary sang đúng Model DictionaryWord
+        deleted_count = DictionaryWord.objects.filter(id__in=vocab_ids).delete()[0]
+        if deleted_count > 0:
+            messages.success(request, f"Đã xóa hàng loạt {deleted_count} từ vựng đã chọn!")
+        else:
+            messages.warning(request, "Không có từ vựng nào được chọn để xóa.")
+    return redirect('all_vocab') # Quay lại danh sách thư viện thay vì trang dashboard chung
 
 # ==========================================
 # 8. THƯ VIỆN CỘNG ĐỒNG (COMMUNITY)

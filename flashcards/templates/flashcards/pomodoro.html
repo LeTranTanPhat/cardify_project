@@ -148,27 +148,57 @@
         updateRing();
     }
 
-    function handleStart() {
-        if (state.running) return;
-        try { getAudio().resume(); } catch(e) {}
+    function resumeTimerUI() {
         state.running = true;
         document.getElementById('start-btn').style.display = 'none';
         document.getElementById('cancel-btn').style.display = 'inline-block';
         document.getElementById('status-text').innerHTML =
             'Đang nạp năng lượng... <span class="spinner-grow spinner-grow-sm text-warning"></span>';
+    }
 
+    function startTick() {
+        clearInterval(state.interval);
+        
         state.interval = setInterval(() => {
-            state.timeLeft--;
+            // ĐỒNG BỘ: Tính toán thời gian thực chính xác dựa trên mốc EndTime toàn cục
+            let endTime = parseInt(sessionStorage.getItem('pomodoro_endTime') || 0);
+            if (endTime) {
+                state.timeLeft = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+            } else {
+                state.timeLeft--;
+            }
+
             updateUI();
+            
             if (state.timeLeft <= 0) {
                 clearInterval(state.interval);
+                state.interval = null;
                 completePomodoro();
             }
         }, 1000);
     }
 
+    function handleStart() {
+        if (state.running) return;
+        try { getAudio().resume(); } catch(e) {}
+
+        // ĐỒNG BỘ: Lưu trạng thái vào sessionStorage để Widget trôi nổi nhận diện
+        sessionStorage.setItem('pomodoro_running', 'true');
+        sessionStorage.setItem('pomodoro_endTime', Date.now() + (state.timeLeft * 1000));
+
+        resumeTimerUI();
+        startTick();
+    }
+
     function completePomodoro() {
         state.running = false;
+        clearInterval(state.interval);
+        state.interval = null;
+
+        // ĐỒNG BỘ: Xóa dữ liệu phiên khi hoàn thành
+        sessionStorage.removeItem('pomodoro_running');
+        sessionStorage.removeItem('pomodoro_endTime');
+
         playDone();
         Swal.fire({
             title: 'NẠP ĐIỆN THÀNH CÔNG!',
@@ -196,14 +226,7 @@
             confirmButtonColor: '#dc3545'
         }).then((result) => {
             if (result.isConfirmed) {
-                clearInterval(state.interval);
-                state.running = false;
-                state.timeLeft = settings.study * 60;
-                state.total = settings.study * 60;
-                document.getElementById('start-btn').style.display = 'inline-block';
-                document.getElementById('cancel-btn').style.display = 'none';
-                document.getElementById('status-text').textContent = 'Sẵn sàng nạp điện?';
-                updateUI();
+                cancelTimerAndReset('Sẵn sàng nạp điện?');
             }
         });
     }
@@ -234,7 +257,70 @@
         if (e.target === this) closeSettings();
     });
 
-    updateUI();
+    // ==========================================
+    // LOGIC DỪNG HẲN & HỦY TIẾN TRÌNH KHI RỜI TRANG
+    // ==========================================
+    let isPomodoroUnloading = false;
+    window.addEventListener('beforeunload', () => { isPomodoroUnloading = true; });
+
+    function cancelTimerAndReset(statusMessage) {
+        clearInterval(state.interval);
+        state.interval = null;
+        state.running = false;
+        
+        // ĐỒNG BỘ: Xóa sạch dấu vết lưu trữ toàn cục
+        sessionStorage.removeItem('pomodoro_running');
+        sessionStorage.removeItem('pomodoro_endTime');
+
+        state.timeLeft = settings.study * 60;
+        state.total = settings.study * 60;
+
+        document.getElementById('start-btn').style.display = 'inline-block';
+        document.getElementById('cancel-btn').style.display = 'none';
+        document.getElementById('status-text').innerHTML = statusMessage;
+        
+        updateUI();
+    }
+
+    function handleCheat() {
+        // Chỉ phạt nếu app đang chạy và không phải do hành động bấm link đổi trang nội bộ
+        if (state.running && !isPomodoroUnloading) {
+            cancelTimerAndReset('<span class="text-danger">⚠️ Đã hủy nạp do bạn rời trang!</span>');
+            
+            Swal.fire({
+                title: 'Thất bại!',
+                text: 'Tiến trình nạp năng lượng đã bị hủy do bạn rời khỏi tab làm việc.',
+                icon: 'error',
+                confirmButtonText: 'Đã hiểu',
+                confirmButtonColor: '#dc3545'
+            });
+        }
+    }
+
+    document.addEventListener("visibilitychange", () => { if (document.hidden) handleCheat(); });
+    window.addEventListener("blur", handleCheat);
+
+    // ĐỒNG BỘ: Khi tải trang, kiểm tra xem có phiên đếm ngược nào đang chạy từ trước không
+    window.addEventListener('DOMContentLoaded', () => {
+        let isRunning = sessionStorage.getItem('pomodoro_running') === 'true';
+        let savedEndTime = sessionStorage.getItem('pomodoro_endTime');
+
+        if (isRunning && savedEndTime) {
+            let remaining = Math.floor((parseInt(savedEndTime) - Date.now()) / 1000);
+            if (remaining > 0) {
+                state.timeLeft = remaining;
+                resumeTimerUI();
+                startTick();
+            } else {
+                // Đã hết giờ khi đang ở trang khác, quay lại để nhận thưởng trực tiếp
+                state.timeLeft = 0;
+                updateUI();
+                completePomodoro();
+            }
+        } else {
+            updateUI();
+        }
+    });
 </script>
 
 {% endblock %}

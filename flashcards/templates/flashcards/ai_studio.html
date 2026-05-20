@@ -14,6 +14,15 @@
         <p>Tự động tạo Flashcard siêu tốc bằng Trí tuệ Nhân tạo. Xem trước và chọn bộ thẻ muốn lưu!</p>
     </div>
 
+    <div class="language-selection" style="background: var(--white); padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px;">
+        <label for="target-language" style="font-weight: 700; color: var(--text-color); margin: 0;">🌐 Ngôn ngữ muốn tạo:</label>
+        <select id="target-language" class="form-control" style="max-width: 200px; cursor: pointer;">
+            <option value="en" selected>🇬🇧 Tiếng Anh</option>
+            <option value="zh">🇨🇳 Tiếng Trung</option>
+            <option value="ko">🇰🇷 Tiếng Hàn</option>
+        </select>
+    </div>
+
     <div class="ai-tabs">
         <button class="tab-btn active" onclick="switchTab(event, 'topic')">📝 Nhập Chủ Đề</button>
         <button class="tab-btn" onclick="switchTab(event, 'image')">📸 Quét Hình Ảnh</button>
@@ -63,8 +72,6 @@
         {% endfor %}
     ];
 
-    // Cấu hình thời gian delay tối thiểu (Tính bằng mili-giây: 5000ms = 5 giây)
-    // Bạn có thể thoải mái sửa số này từ 5000 thành 7000 (7s) hoặc 10000 (10s) tùy ý
     const AI_MINIMUM_DELAY = 5000; 
 
     function getDeckOptionsHTML() {
@@ -152,30 +159,35 @@
         document.getElementById('result-section').style.display = 'block';
     }
 
-    // Gửi yêu cầu AI - Chủ đề (Đã thêm cơ chế giữ Loading Screen)
+    // ==========================================
+    // CẬP NHẬT: GỬI KÈM NGÔN NGỮ LÊN BACKEND
+    // ==========================================
+
     function generateFromTopic() {
         const topic = document.getElementById('topic-input').value.trim();
+        const targetLang = document.getElementById('target-language').value; // Lấy ngôn ngữ
+
         if (!topic) {
             alert('Vui lòng nhập chủ đề!');
             return;
         }
 
-        const startTime = Date.now(); // Ghi nhận thời điểm bắt đầu bấm nút
+        const startTime = Date.now(); 
         showLoading('AI đang suy nghĩ và sáng tạo từ vựng cho bạn...');
 
         fetch("{% url 'ai_generate_topic_raw' %}", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ topic: topic })
+            body: JSON.stringify({ 
+                topic: topic, 
+                language: targetLang // Gửi ngôn ngữ (en/zh/ko) cho AI biết
+            })
         })
         .then(response => response.json())
         .then(data => {
-            // Tính toán thời gian thực tế đã trôi qua
             const elapsedTime = Date.now() - startTime;
-            // Tính thời gian còn lại cần phải chờ để đạt mức tối thiểu (ví dụ 5000ms)
             const remainingTime = Math.max(0, AI_MINIMUM_DELAY - elapsedTime);
 
-            // Giữ màn hình loading chạy thêm cho đủ thời gian cấu hình
             setTimeout(() => {
                 hideLoading();
                 if (data.status === 'success') {
@@ -191,9 +203,10 @@
         });
     }
 
-    // Gửi yêu cầu AI - Hình ảnh (Đã thêm cơ chế giữ Loading Screen)
     function generateFromImage() {
         const fileInput = document.getElementById('image-input');
+        const targetLang = document.getElementById('target-language').value; // Lấy ngôn ngữ
+
         if (!fileInput.files.length) {
             alert('Vui lòng chọn một hình ảnh!');
             return;
@@ -201,8 +214,9 @@
 
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
+        formData.append('language', targetLang); // Gửi ngôn ngữ dạng form-data
 
-        const startTime = Date.now(); // Ghi nhận thời điểm bắt đầu quét ảnh
+        const startTime = Date.now(); 
         showLoading('AI đang tiến hành phân tích sâu cấu trúc hình ảnh...');
 
         fetch("{% url 'ai_generate_image_raw' %}", {
@@ -211,11 +225,9 @@
         })
         .then(response => response.json())
         .then(data => {
-            // Tính toán thời gian thực tế đã trôi qua
             const elapsedTime = Date.now() - startTime;
             const remainingTime = Math.max(0, AI_MINIMUM_DELAY - elapsedTime);
 
-            // Giữ màn hình loading chạy thêm cho đủ thời gian cấu hình
             setTimeout(() => {
                 hideLoading();
                 if (data.status === 'success') {
@@ -235,6 +247,8 @@
         const front = document.getElementById(`front-${index}`).value.trim();
         const back = document.getElementById(`back-${index}`).value.trim();
         const deckId = document.getElementById(`deck-select-${index}`).value;
+        const targetLang = document.getElementById('target-language').value; // Bổ sung truyền ngôn ngữ xuống DB
+        
         const btn = document.getElementById(`btn-save-${index}`);
         const statusSpan = document.getElementById(`status-${index}`);
 
@@ -256,7 +270,8 @@
             body: JSON.stringify({
                 deck_id: deckId,
                 front: front,
-                back: back
+                back: back,
+                language: targetLang // Gửi kèm ngôn ngữ để lưu vào Database nếu cần thiết
             })
         })
         .then(res => res.json())
