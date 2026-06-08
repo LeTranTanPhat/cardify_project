@@ -11,25 +11,28 @@
 .sidebar {
     width: var(--sidebar-width, 280px);
     background-color: var(--white, #FFFFFF);
-    /* Thay thế bằng thuộc tính logic bảo vệ đa ngôn ngữ và hướng hiển thị */
     border-inline-end: 1px solid rgba(226, 232, 240, 0.8);
     box-shadow: 6px 0 32px rgba(15, 23, 42, 0.015);
     position: fixed;
     inset-block: 0; /* Khóa cứng cả top và bottom = 0 */
     left: 0;
-    padding: clamp(1.5rem, 4vh, 2.5rem) 1.5rem; /* Giãn cách thông minh dựa trên chiều cao màn hình */
+    padding: clamp(1.5rem, 4vh, 2.5rem) 1.5rem; 
     display: flex;
     flex-direction: column;
     z-index: 1000;
-    /* Apple Smooth Curve: Tránh hiện tượng giật giật khi mở trên mobile */
     transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: transform; /* Ép trình duyệt kích hoạt nhân đồ họa GPU */
+    will-change: transform; 
+
+    /* --- FIX LỖI CUỘN SIDEBAR --- */
+    overflow-y: auto; 
+    overflow-x: hidden;
+    overscroll-behavior: contain;
 
     /* Bắt đầu áp dụng Native CSS Nesting */
     & .brand-logo {
         font-family: 'Orbitron', system-ui, sans-serif;
         font-size: 1.55rem;
-        font-weight: 950; /* Tăng độ dày chữ béo trên màn hình Retina */
+        font-weight: 950; 
         background: var(--primary-gradient, linear-gradient(135deg, #FFC107 0%, #FF8C00 100%));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -54,7 +57,7 @@
         flex-grow: 1;
         display: flex;
         flex-direction: column;
-        gap: 4px; /* Menu gọn gàng thanh lịch */
+        gap: 4px; 
     }
 
     & .nav-link {
@@ -64,7 +67,6 @@
         color: var(--muted-text, #64748B);
         text-decoration: none;
         border-radius: 12px;
-        /* KHỬ CHUYỂN ĐỘNG "ALL" - Chỉ định rõ thuộc tính tăng tốc render */
         transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
                     background-color 0.25s ease,
                     color 0.25s ease;
@@ -76,7 +78,7 @@
         &:hover, &:focus-visible {
             background-color: var(--light-gray, #F8FAFC);
             color: var(--dark-text, #0F172A);
-            transform: translateX(6px); /* Đẩy nhẹ mượt mà hơn */
+            transform: translateX(6px); 
         }
 
         /* Trạng thái Active Cao Cấp */
@@ -88,7 +90,7 @@
             &::before {
                 content: "";
                 position: absolute;
-                left: 0; top: 25%; /* Cực mỏng thu hẹp dải định vị */
+                left: 0; top: 25%; 
                 height: 50%; 
                 width: 3.5px;
                 background-color: var(--primary-yellow, #FFC107);
@@ -110,7 +112,7 @@
 }
 
 .content-area {
-    margin-inline-start: var(--sidebar-width, 280px); /* Tự động tính toán khoảng lề theo hướng trang */
+    margin-inline-start: var(--sidebar-width, 280px); 
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -122,8 +124,7 @@
    ========================================================================== */
 .top-navbar {
     height: 76px;
-    background-color: rgba(255, 255, 255, 0.6); /* Hạ bớt alpha để tăng độ mờ kính */
-    /* Cường hóa bộ lọc bão hòa màu mặt nền cuộn phía dưới kính */
+    background-color: rgba(255, 255, 255, 0.6); 
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border-bottom: 1px solid rgba(226, 232, 240, 0.5); 
@@ -168,7 +169,7 @@
         height: 100%;
         background: var(--primary-gradient, linear-gradient(90deg, #FFC107, #FF8C00));
         box-shadow: 0 0 12px rgba(255, 140, 0, 0.4);
-        transition: width 0.8s cubic-bezier(0.34, 1.3, 0.64, 1); /* Co bóp đàn hồi nhẹ */
+        transition: width 0.8s cubic-bezier(0.34, 1.3, 0.64, 1); 
         position: relative;
 
         /* Khúc xạ vệt lướt chất lỏng (Liquid Shimmer Glow) */
@@ -249,12 +250,11 @@
     }
 }
 
-/* Lớp phủ nhung siêu mịn (Velvet Backdrop Overlay) */
 .sidebar-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background-color: rgba(15, 23, 42, 0.3); /* Slate 900 dịu nhẹ */
+    background-color: rgba(15, 23, 42, 0.3); 
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     z-index: 990;
@@ -268,41 +268,69 @@
     }
 }
 
-/* Responsive Breakpoint */
+/* --- BẢN CẬP NHẬT RESPONSIVE CHO ĐIỆN THOẠI --- */
 @media (max-width: 768px) {
-    .menu-toggle { 
-        display: block; 
-    }
-    
-    .sidebar-overlay { 
-        display: block; 
-    }
+    .menu-toggle { display: block; }
+    .sidebar-overlay { display: block; }
     
     .sidebar { 
         transform: translateX(-100%); 
         box-shadow: 25px 0 60px rgba(15, 23, 42, 0.15); 
+        width: 260px; /* Thu hẹp sidebar một chút cho mobile */
         
-        &.active { 
-            transform: translateX(0); 
-        }
+        &.active { transform: translateX(0); }
     }
     
-    .content-area { 
-        margin-inline-start: 0; 
-    }
+    .content-area { margin-inline-start: 0; }
     
     .top-navbar { 
         justify-content: space-between; 
-        padding-inline: 1.2rem; 
+        padding-inline: 1rem; 
+        height: 65px; /* Thu gọn chiều cao thanh Navbar */
     }
     
-    .energy-bar-container, 
-    .username-text { 
-        display: none; 
+    /* Ép thanh Trạng thái nhỏ lại thay vì ẩn hoàn toàn */
+    .user-status-wrapper { 
+        gap: 0.4rem; 
     }
     
-    .stat-badge {
-        padding: 6px 12px;
-        font-size: 0.82rem;
+    .energy-bar-container {
+        padding: 4px 8px;
+        gap: 4px;
     }
+    
+    .energy-progress {
+        width: 40px !important; /* Rút ngắn độ dài thanh sạc năng lượng */
+    }
+    
+    .level-xp-container .progress, 
+    .level-xp-container #xp-text {
+        display: none !important; /* Chỉ ẩn thanh màu xanh XP, giữ lại huy hiệu Cấp độ */
+    }
+    
+    .stat-badge, .level-badge {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+    
+    .username-text { display: none; } /* Ẩn tên user để tiết kiệm không gian */
+}
+
+/* ==========================================================================
+   4. ẨN THANH CUỘN CHO SIDEBAR ĐỂ GIAO DIỆN SẠCH SẼ HƠN
+   ========================================================================== */
+.sidebar::-webkit-scrollbar {
+    width: 4px; /* Thanh cuộn siêu mỏng */
+}
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(203, 213, 225, 0); /* Ẩn đi khi không thao tác */
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+.sidebar:hover::-webkit-scrollbar-thumb,
+.sidebar:active::-webkit-scrollbar-thumb {
+    background: rgba(203, 213, 225, 0.8); /* Chỉ hiện mờ mờ khi vuốt hoặc hover */
 }
