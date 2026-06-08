@@ -161,3 +161,37 @@
         }
     }
 }
+
+/* ==========================================================================
+   9. RESPONSIVE GLOBAL (WIDGET POMODORO, AUTH, SETTINGS)
+   ========================================================================== */
+   @media (max-width: 768px) {
+    /* Thu nhỏ widget pomodoro góc dưới và đẩy sát vào viền */
+    .energy-widget {
+        bottom: 15px !important;
+        right: 15px !important;
+        padding: 8px 16px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Tối ưu form cài đặt / đăng nhập */
+    .auth-card, .settings-modal {
+        padding: 24px 20px !important;
+        border-radius: 20px !important;
+        width: 100% !important;
+    }
+    
+    /* Căn lại thanh gạt Switch toggle cho gọn */
+    .theme-toggle-wrapper {
+        padding: 12px 16px;
+        gap: 10px;
+    }
+    
+    .theme-toggle-wrapper p {
+        font-size: 0.9rem;
+    }
+    
+    .theme-toggle-wrapper small {
+        font-size: 0.75rem;
+    }
+}

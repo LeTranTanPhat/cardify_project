@@ -232,3 +232,41 @@
     82%  { transform: translate(-50%, -54%) scale(1); opacity: 1; filter: blur(0); } /* Chống trọng lực trôi lơ lửng cinematic */
     100% { transform: translate(-50%, -75%) scale(0.75); opacity: 0; filter: blur(6px); } /* Bay vút biến mất vào không trung */
 }
+
+/* ==========================================================================
+   13. RESPONSIVE CHO MOBILE (ARENA & FLASHCARD)
+   ========================================================================== */
+   @media (max-width: 768px) {
+    .arena-wrapper {
+        padding: 0 15px; /* Giảm lề 2 bên khung học */
+    }
+    
+    .scene {
+        /* Giảm chiều cao thẻ để vừa màn hình điện thoại, tránh phải cuộn */
+        height: clamp(280px, 55vh, 340px); 
+        margin: 1.5rem 0; 
+    }
+    
+    .card-face {
+        padding: 24px 16px; /* Giảm padding bên trong thẻ */
+        border-radius: 24px; /* Bo góc mềm hơn trên mobile */
+    }
+    
+    .card-content {
+        /* Ép chữ nhỏ lại để các từ dài (ví dụ tiếng Anh) không tràn xuống dòng */
+        font-size: clamp(1.4rem, 6vw, 1.8rem); 
+    }
+    
+    /* Thu gọn nút Quên / Nhớ */
+    #action-controls .btn {
+        padding: 12px !important;
+        font-size: 0.9rem;
+        border-radius: 12px !important;
+    }
+    
+    /* Thu nhỏ banner level up siêu to khổng lồ */
+    .levelup-banner {
+        padding: 1rem 2.5rem !important;
+        font-size: 1.5rem !important;
+    }
+}
