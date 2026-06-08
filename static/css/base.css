@@ -168,7 +168,6 @@ html{
     scrollbar-color: #CBD5E1 transparent;
 }
 
-
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
